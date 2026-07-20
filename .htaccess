@@ -1,0 +1,16 @@
+# Protect config and the SQLite database from direct web access.
+<FilesMatch "\.(sqlite|db)$">
+    Require all denied
+</FilesMatch>
+
+<Files "config.php">
+    # config.php is included by PHP, never served directly; block raw fetch anyway.
+    Require all denied
+</Files>
+
+# Send visitors to the login/dashboard by default.
+DirectoryIndex index.php
+
+# Basic hardening.
+Options -Indexes
+ServerSignature Off
