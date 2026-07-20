@@ -105,8 +105,14 @@ function run_migrations(PDO $pdo): void
         return;
     }
 
-    // Only back up if there is real data to lose (version > 0 means the app has run).
-    if ($have > 0) {
+    // Back up whenever the database already contains user tables — this covers a
+    // pre-migration database (version 0 but full of live data), which is exactly
+    // the riskiest case. A brand-new empty database has nothing worth copying.
+    $existingTables = (int)$pdo->query(
+        "SELECT COUNT(*) FROM sqlite_master
+         WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> 'migrations'"
+    )->fetchColumn();
+    if ($existingTables > 0) {
         backup_database('premigrate');
     }
 

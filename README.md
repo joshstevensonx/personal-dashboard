@@ -14,6 +14,16 @@ A single, private web app that bundles four everyday tools behind one login:
 
 Plus a **daily email digest** (via cron) for anything renewing or due soon.
 
+**Phase 1 app shell** (see ROADMAP.md for the full plan):
+- **Sidebar navigation** with grouped sections
+- **Command palette** — `⌘K` / `Ctrl+K`, fuzzy search over every page and action
+- **Keyboard-first navigation** — `g`+key to jump anywhere, `?` for the cheatsheet, `⇧D` theme toggle
+- **Theming** — auto/dark/light, 4 presets (Midnight, Slate, Nord, Paper), accent colour picker, density
+- **Customisable shortcuts** and start page
+- **Installable PWA** — Dock icon on macOS, home-screen app on iPhone, offline shell
+- **Migration runner** — forward-only schema changes with an automatic pre-change DB backup
+- **JSON API** (`api.php`) for a future native client
+
 > **How the remote hub works:** it's a launcher and directory, not a screen-streaming
 > server. The actual connection runs through the remote-access app you choose (RustDesk,
 > Chrome Remote Desktop, Microsoft Remote Desktop, VNC/Screen Sharing). A PHP host can't
