@@ -9,6 +9,7 @@
  * GET  api.php?action=summary       counts for the dashboard widgets
  */
 require_once __DIR__ . '/lib.php';
+require_once __DIR__ . '/lib/pages.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
@@ -61,6 +62,63 @@ switch ($action) {
             'devices'       => (int)$pdo->query("SELECT COUNT(*) FROM devices")->fetchColumn(),
         ]]);
 
+    /* ---------------------------------------------------- blocks & pages -- */
+    // These mutate data, so they require the CSRF token in the JSON body.
+    case 'block_add':
+    case 'block_update':
+    case 'block_props':
+    case 'block_delete':
+    case 'block_reorder':
+    case 'value_set':
+        if (!hash_equals(csrf_token(), (string)($body['csrf'] ?? ''))) {
+            out(['error' => 'bad csrf'], 400);
+        }
+        break;
+
     default:
         out(['error' => 'unknown action'], 404);
 }
+
+switch ($action) {
+    case 'block_add':
+        $pageId = (int)($body['page_id'] ?? 0);
+        if (!$pageId) { out(['error' => 'page_id required'], 400); }
+        $id = add_block(
+            $pageId,
+            (string)($body['type'] ?? 'paragraph'),
+            (string)($body['content'] ?? ''),
+            !empty($body['after']) ? (int)$body['after'] : null
+        );
+        out(['ok' => true, 'id' => $id]);
+
+    case 'block_update':
+        update_block(
+            (int)($body['id'] ?? 0),
+            array_key_exists('content', $body) ? (string)$body['content'] : null,
+            array_key_exists('type', $body) ? (string)$body['type'] : null
+        );
+        out(['ok' => true]);
+
+    case 'block_props':
+        $props = is_array($body['props'] ?? null) ? $body['props'] : [];
+        update_block((int)($body['id'] ?? 0), null, null, $props);
+        out(['ok' => true]);
+
+    case 'block_delete':
+        delete_block((int)($body['id'] ?? 0));
+        out(['ok' => true]);
+
+    case 'block_reorder':
+        $order = array_map('intval', (array)($body['order'] ?? []));
+        reorder_blocks((int)($body['page_id'] ?? 0), $order);
+        out(['ok' => true]);
+
+    case 'value_set':
+        $rowId = (int)($body['row_id'] ?? 0);
+        $key = trim((string)($body['key'] ?? ''));
+        if (!$rowId || $key === '') { out(['error' => 'row_id and key required'], 400); }
+        set_value($rowId, $key, (string)($body['value'] ?? ''));
+        out(['ok' => true]);
+}
+
+out(['error' => 'unknown action'], 404);

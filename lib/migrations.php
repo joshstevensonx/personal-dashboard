@@ -291,6 +291,60 @@ function migration_list(): array
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
         "],
+
+        7 => ['pages_and_blocks', "
+            -- Everything-is-a-page. Pages nest infinitely.
+            CREATE TABLE IF NOT EXISTS pages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                parent_id INTEGER REFERENCES pages(id) ON DELETE CASCADE,
+                title TEXT NOT NULL DEFAULT 'Untitled',
+                icon TEXT,                       -- emoji
+                cover TEXT,                      -- gradient name or image path
+                is_database INTEGER NOT NULL DEFAULT 0,
+                db_view TEXT NOT NULL DEFAULT 'table',   -- table | board | gallery | list
+                db_group_by TEXT,                -- property key used for board columns
+                position INTEGER NOT NULL DEFAULT 0,
+                favorite INTEGER NOT NULL DEFAULT 0,
+                archived INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_pages_parent ON pages(parent_id);
+
+            -- Ordered, typed, nestable content blocks.
+            CREATE TABLE IF NOT EXISTS blocks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                page_id INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+                parent_block_id INTEGER REFERENCES blocks(id) ON DELETE CASCADE,
+                type TEXT NOT NULL DEFAULT 'paragraph',
+                content TEXT NOT NULL DEFAULT '',
+                props TEXT,                      -- JSON: {checked, collapsed, lang, color, ...}
+                position INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_blocks_page ON blocks(page_id, position);
+
+            -- Database column definitions (one row per property per database page).
+            CREATE TABLE IF NOT EXISTS db_properties (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                database_id INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+                key TEXT NOT NULL,
+                name TEXT NOT NULL,
+                type TEXT NOT NULL DEFAULT 'text', -- text|number|select|multi|date|checkbox|url
+                options TEXT,                      -- JSON array for select/multi
+                position INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE INDEX IF NOT EXISTS idx_dbprops ON db_properties(database_id, position);
+
+            -- Property values for a row (a row IS a page whose parent is the database).
+            CREATE TABLE IF NOT EXISTS page_values (
+                page_id INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+                key TEXT NOT NULL,
+                value TEXT,
+                PRIMARY KEY (page_id, key)
+            );
+        "],
     ];
 }
 

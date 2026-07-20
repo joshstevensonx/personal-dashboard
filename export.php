@@ -219,7 +219,7 @@ page_header('export.php');
                     </div>
                     <?php if ($img): ?>
                         <button class="ghost mini ocr-btn" type="button"
-                                data-id="<?= (int)$at['id'] ?>" data-src="<?= e($at['path']) ?>">
+                                data-id="<?= (int)$at['id'] ?>" data-src="<?= e(attachment_url($at['path'])) ?>">
                             <?= !empty($at['ocr_text']) ? 'Re-run OCR' : 'Run OCR' ?></button>
                     <?php else: ?>
                         <span class="muted" style="font-size:12px">images only</span>

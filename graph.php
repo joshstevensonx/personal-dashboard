@@ -49,8 +49,8 @@ page_header('graph.php');
 <?php endif; ?>
 
 <script>
-window.GRAPH = { nodes: <?= json_encode($nodes, JSON_UNESCAPED_UNICODE) ?>,
-                 edges: <?= json_encode($edges) ?> };
+window.GRAPH = { nodes: <?= json_for_html($nodes) ?>,
+                 edges: <?= json_for_html($edges) ?> };
 </script>
 <script src="assets/graph.js"></script>
 <?php page_footer();

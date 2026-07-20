@@ -71,6 +71,22 @@ function e(?string $s): string
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
 
+/**
+ * JSON that is safe to embed inside a <script> block.
+ *
+ * Plain json_encode() does NOT escape "<", so user content containing
+ * "</script>" would close the tag early and execute as HTML — a stored XSS.
+ * JSON_HEX_TAG (plus the other HEX flags) encodes those characters as <
+ * etc., which JSON.parse and JS string literals still read back correctly.
+ */
+function json_for_html($data): string
+{
+    return json_encode(
+        $data,
+        JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
+    );
+}
+
 function flash(?string $msg = null): ?string
 {
     if ($msg !== null) {
@@ -138,6 +154,22 @@ function advance_renewal(string $date, string $cycle): string
 function money(float $amount, string $currency): string
 {
     return e($currency) . ' ' . number_format($amount, 2);
+}
+
+/**
+ * Public URL for a stored attachment.
+ * Handles both storage styles: legacy rows saved as "uploads/abc.png" (inside
+ * the web root) and new rows saved as a bare filename (outside the web root,
+ * streamed by media.php).
+ */
+function attachment_url(string $stored): string
+{
+    $name = basename($stored);
+    $external = defined('UPLOAD_PATH') && UPLOAD_PATH !== __DIR__ . '/uploads';
+    if ($external) {
+        return 'media.php?f=' . rawurlencode($name);
+    }
+    return 'uploads/' . rawurlencode($name);
 }
 
 /** Human label for a days-until integer. */

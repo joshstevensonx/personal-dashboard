@@ -6,7 +6,9 @@ require_once __DIR__ . '/partials.php';
 require_login();
 $pdo = db();
 
-$uploadDir = __DIR__ . '/uploads';
+// Uploads live outside httpdocs when available (see config.php) so that git
+// deploys cannot delete attachments.
+$uploadDir = defined('UPLOAD_PATH') ? UPLOAD_PATH : __DIR__ . '/uploads';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
@@ -107,8 +109,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (in_array($ext, $allowed, true) && $f['size'] < 12 * 1024 * 1024) {
             $safe = bin2hex(random_bytes(8)) . '.' . $ext;
             if (move_uploaded_file($f['tmp_name'], $uploadDir . '/' . $safe)) {
+                // Store the bare filename; attachment_url() resolves it for the
+                // current storage location (in-webroot or external + media.php).
                 $pdo->prepare("INSERT INTO attachments (note_id, filename, path, mime, size) VALUES (?,?,?,?,?)")
-                    ->execute([$nid ?: null, $f['name'], 'uploads/' . $safe, $f['type'] ?? '', (int)$f['size']]);
+                    ->execute([$nid ?: null, $f['name'], $safe, $f['type'] ?? '', (int)$f['size']]);
                 flash('File uploaded — insert it with the link shown below.');
             }
         } else {
@@ -322,13 +326,14 @@ page_header('notes.php');
                 <?php if ($atts): ?>
                     <div class="card" style="margin-top:12px">
                         <h2>Attachments</h2>
-                        <?php foreach ($atts as $at): $isImg = preg_match('/\.(png|jpe?g|gif|webp|svg)$/i', $at['path']); ?>
+                        <?php foreach ($atts as $at): $isImg = preg_match('/\.(png|jpe?g|gif|webp|svg)$/i', $at['path']);
+                            $url = attachment_url($at['path']); ?>
                             <div class="item" style="padding:8px 10px">
                                 <span class="grow" style="font-size:13px"><?= e($at['filename']) ?>
                                     <span class="muted">(<?= number_format($at['size'] / 1024, 0) ?> KB)</span></span>
                                 <button class="ghost mini" type="button"
-                                    data-copy="<?= $isImg ? '!' : '' ?>[<?= e($at['filename']) ?>](<?= e($at['path']) ?>)">Copy markdown</button>
-                                <a class="pill" href="<?= e($at['path']) ?>" target="_blank">Open</a>
+                                    data-copy="<?= $isImg ? '!' : '' ?>[<?= e($at['filename']) ?>](<?= e($url) ?>)">Copy markdown</button>
+                                <a class="pill" href="<?= e($url) ?>" target="_blank">Open</a>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -369,6 +374,6 @@ page_header('notes.php');
     </div>
 </div>
 
-<script>window.NOTE_TITLES = <?= json_encode(array_keys($titleMap), JSON_UNESCAPED_UNICODE) ?>;</script>
+<script>window.NOTE_TITLES = <?= json_for_html(array_keys($titleMap)) ?>;</script>
 <script src="assets/notes.js"></script>
 <?php page_footer();

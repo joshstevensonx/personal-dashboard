@@ -5,6 +5,46 @@
  * every existing module renders in the new shell without modification.
  */
 require_once __DIR__ . '/lib.php';
+require_once __DIR__ . '/lib/pages.php';
+
+/**
+ * Recursive page tree for the sidebar.
+ *
+ * A database's child pages are its rows, so they're deliberately NOT expanded
+ * here — rows belong inside the database view, not the navigation tree.
+ */
+function render_page_tree(array $tree, int $parent = 0, int $depth = 0, int $activeId = 0): void
+{
+    $kids = $tree[$parent] ?? [];
+    if (!$kids || $depth > 6) {
+        return;
+    }
+    foreach ($kids as $p) {
+        $id = (int)$p['id'];
+        $isDb = !empty($p['is_database']);
+        $grandKids = (!$isDb && !empty($tree[$id])) ? $tree[$id] : [];
+        $open = $id === $activeId;
+        $icon = $p['icon'] ?: ($isDb ? '🗃' : '📄');
+
+        echo "<div class='tree-node'>";
+        echo "<div class='tree-row" . ($id === $activeId ? ' on' : '') . "'>";
+        if ($grandKids) {
+            echo "<button class='tree-caret" . ($open ? ' open' : '') . "' type='button' aria-label='Expand'>▸</button>";
+        } else {
+            echo "<span class='tree-caret' style='visibility:hidden'>▸</span>";
+        }
+        echo "<span class='tree-ico'>" . e($icon) . "</span>";
+        echo "<a class='tree-link' href='page.php?id=$id'>" . e($p['title']) . "</a>";
+        echo "</div>";
+
+        if ($grandKids) {
+            echo "<div class='tree-kids'" . ($open ? " style='display:block'" : '') . ">";
+            render_page_tree($tree, $id, $depth + 1, $activeId);
+            echo "</div>";
+        }
+        echo "</div>";
+    }
+}
 
 /** Navigation model — grouped. Later phases append to these groups. */
 function nav_model(): array
@@ -29,6 +69,7 @@ function nav_model(): array
             'dates.php'         => ['Dates', '◷'],
         ],
         'Knowledge' => [
+            'page.php'      => ['Pages', '◫'],
             'notes.php'     => ['Notes', '✎'],
             'graph.php'     => ['Graph', '⁂'],
         ],
@@ -66,6 +107,17 @@ function command_model(): array
     $cmds[] = ['id' => 'new:habit',    'label' => 'Add a habit',            'group' => 'Create', 'icon' => '+', 'href' => 'habits.php#new'];
     $cmds[] = ['id' => 'new:goal',     'label' => 'Add a goal',             'group' => 'Create', 'icon' => '+', 'href' => 'goals.php#new'];
     $cmds[] = ['id' => 'go:pomodoro',  'label' => 'Start a focus session',  'group' => 'Focus',  'icon' => '◐', 'href' => 'focus.php'];
+    $cmds[] = ['id' => 'go:pages',     'label' => 'All pages',              'group' => 'Pages',  'icon' => '◫', 'href' => 'page.php'];
+    // Recent pages become palette entries, so ⌘K jumps straight to any page.
+    try {
+        foreach (db()->query("SELECT id, title, icon, is_database FROM pages
+                              WHERE archived = 0 ORDER BY COALESCE(updated_at, created_at) DESC LIMIT 25") as $p) {
+            $cmds[] = ['id' => 'page:' . $p['id'], 'label' => $p['title'],
+                       'group' => $p['is_database'] ? 'Database' : 'Page',
+                       'icon' => $p['icon'] ?: ($p['is_database'] ? '🗃' : '📄'),
+                       'href' => 'page.php?id=' . (int)$p['id']];
+        }
+    } catch (Throwable $e) { /* pages table not migrated yet */ }
     $cmds[] = ['id' => 'new:note',     'label' => 'New note',               'group' => 'Create', 'icon' => '✎', 'href' => 'notes.php?new='];
     $cmds[] = ['id' => 'go:daily',     "label" => "Today's daily note",     'group' => 'Notes',  'icon' => '☀', 'href' => 'notes.php?daily=1'];
     $cmds[] = ['id' => 'go:search',    'label' => 'Search notes',           'group' => 'Notes',  'icon' => '⌕', 'href' => 'notes.php'];
@@ -110,20 +162,24 @@ function page_header(string $active = ''): void
     $density = (string)setting('density');
     $style = theme_style_attr();
     $name = e(APP_NAME);
-    $cmds = json_encode(command_model(), JSON_UNESCAPED_SLASHES);
-    $shortcuts = json_encode(setting_json('shortcuts', []), JSON_UNESCAPED_SLASHES);
+    $cmds = json_for_html(command_model());
+    $shortcuts = json_for_html(setting_json('shortcuts', []));
 
     echo "<!doctype html><html lang='en' data-theme='" . e($theme) . "' data-density='" . e($density) . "' style='" . e($style) . "'><head>";
     echo "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, viewport-fit=cover'>";
     echo "<title>$name</title>";
     echo "<link rel='stylesheet' href='assets/style.css'>";
+    echo "<link rel='stylesheet' href='assets/notion.css'>";
     echo "<link rel='manifest' href='manifest.webmanifest'>";
     echo "<meta name='theme-color' content='" . e((string)setting('accent')) . "'>";
     echo "<meta name='apple-mobile-web-app-capable' content='yes'>";
     echo "<meta name='apple-mobile-web-app-title' content='$name'>";
     echo "<link rel='apple-touch-icon' href='assets/icons/icon-180.png'>";
     echo "<link rel='icon' href='assets/icons/icon-192.png'>";
-    echo "</head><body>";
+    // The Notion layer is opt-out: assets/notion.css is scoped to body.notion,
+    // so switching this setting to "classic" restores the original shell.
+    $bodyClass = setting('ui_style') === 'classic' ? '' : ' class="notion"';
+    echo "</head><body$bodyClass>";
 
     echo "<div class='app'>";
 
@@ -137,6 +193,31 @@ function page_header(string $active = ''): void
             echo "<a $on href='" . e($file) . "'><span class='ic'>" . $icon . "</span>" . e($label) . "</a>";
         }
     }
+
+    /* -- Notion-style page tree -- */
+    $tree = [];
+    try { $tree = page_tree(); } catch (Throwable $e) { $tree = []; }
+    $activePage = (isset($_GET['id']) && basename($_SERVER['SCRIPT_NAME'] ?? '') === 'page.php')
+        ? (int)$_GET['id'] : 0;
+
+    $favs = array_filter($tree[0] ?? [], fn($p) => !empty($p['favorite']));
+    if ($favs) {
+        echo "<div class='sec'>Favourites</div>";
+        foreach ($favs as $f) {
+            echo "<a class='tree-fav" . ((int)$f['id'] === $activePage ? ' on' : '') . "' href='page.php?id="
+               . (int)$f['id'] . "'><span class='ic'>" . e($f['icon'] ?: '★') . "</span>" . e($f['title']) . "</a>";
+        }
+    }
+
+    echo "<div class='sec sec-row'><span>Pages</span>"
+       . "<a class='sec-add' href='page.php' title='All pages'>＋</a></div>";
+    echo "<div class='tree'>";
+    render_page_tree($tree, 0, 0, $activePage);
+    if (empty($tree[0])) {
+        echo "<a class='tree-empty' href='page.php'>Create your first page</a>";
+    }
+    echo "</div>";
+
     echo "</nav><div class='foot'><span class='kbd-hint'>Press <kbd>?</kbd> for keys</span>"
        . "<a class='pill' href='logout.php'>Sign out</a></div>";
     echo "</aside>";
@@ -157,7 +238,7 @@ function page_header(string $active = ''): void
 
     // Data the shell's JS needs.
     echo "<script id='app-data' type='application/json'>"
-       . json_encode(['commands' => command_model(), 'shortcuts' => setting_json('shortcuts', [])], JSON_UNESCAPED_SLASHES)
+       . json_for_html(['commands' => command_model(), 'shortcuts' => setting_json('shortcuts', [])])
        . "</script>";
 }
 

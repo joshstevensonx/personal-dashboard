@@ -14,6 +14,7 @@ function setting_defaults(): array
         'shortcuts'  => '{}',        // JSON: { "commandId": "key" }
         'layout'     => '[]',        // JSON: ordered dashboard widget ids
         'start_page' => 'index.php',
+        'ui_style'   => 'notion',    // notion | classic
     ];
 }
 

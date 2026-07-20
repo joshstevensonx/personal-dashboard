@@ -224,6 +224,19 @@
     if (first) { first.focus(); first.scrollIntoView({ block: 'center' }); }
   }
 
+  /* ------------------------------------------------- sidebar page tree */
+  document.addEventListener('click', function (ev) {
+    var caret = ev.target.closest('.tree-caret');
+    if (!caret || caret.tagName !== 'BUTTON') return;
+    ev.preventDefault();
+    var node = caret.closest('.tree-node');
+    var kids = node ? node.querySelector('.tree-kids') : null;
+    if (!kids) return;
+    var open = kids.style.display === 'block';
+    kids.style.display = open ? 'none' : 'block';
+    caret.classList.toggle('open', !open);
+  });
+
   /* --------------------------------------------------------------------- PWA */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {

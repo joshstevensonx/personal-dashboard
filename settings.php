@@ -16,7 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!preg_match('/^#[0-9a-f]{6}$/i', $accent)) { $accent = '#6ea8fe'; }
         $density = in_array($_POST['density'] ?? '', ['comfortable', 'compact'], true) ? $_POST['density'] : 'comfortable';
         $start = $_POST['start_page'] ?? 'index.php';
+        $ui = in_array($_POST['ui_style'] ?? '', ['notion', 'classic'], true) ? $_POST['ui_style'] : 'notion';
 
+        set_setting('ui_style', $ui);
         set_setting('theme', $theme);
         set_setting('preset', $preset);
         set_setting('accent', $accent);
@@ -69,6 +71,18 @@ page_header('settings.php');
 
     <h2 style="margin:22px 0 10px">Appearance</h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+
+        <div class="card">
+            <h2>Interface</h2>
+            <div class="field">
+                <select name="ui_style">
+                    <option value="notion"  <?= setting('ui_style') !== 'classic' ? 'selected' : '' ?>>Notion style</option>
+                    <option value="classic" <?= setting('ui_style') === 'classic' ? 'selected' : '' ?>>Classic dashboard</option>
+                </select>
+            </div>
+            <p class="muted" style="margin:0;font-size:13px">Notion style gives the page-centric layout,
+               lighter typography and block editor chrome.</p>
+        </div>
 
         <div class="card">
             <h2>Mode</h2>

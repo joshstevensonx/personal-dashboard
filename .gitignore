@@ -1,18 +1,25 @@
-# --- Live data — NEVER commit; a deploy would overwrite the real database ---
+# =============================================================================
+# Git deploys write into httpdocs/. Anything the app WRITES must either be
+# ignored here, or live outside httpdocs (preferred — see config.php).
+# =============================================================================
+
+# --- Live data — never commit; a deploy would overwrite the real database ----
 data/
-data/*.sqlite
-data/*.sqlite-journal
-data/*.sqlite-wal
-data/*.sqlite-shm
-data/backups/
 uploads/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 
 # --- Secrets ---
-# config.php holds your password hash and email address.
-# Keep the real one on the server only; commit config.sample.php instead.
-config.php
+# The real secrets file lives OUTSIDE httpdocs (dashboard-secrets.php in the
+# domain folder). This entry is belt-and-braces in case a copy lands here.
+dashboard-secrets.php
 
-# --- Setup helpers that must not stay on a live site ---
+# NOTE: config.php IS committed. It holds no secrets — it just loads
+# dashboard-secrets.php from outside the web root and supplies safe defaults.
+
+# --- Setup helpers: keep out of the repo so they can't reappear on a live site
 setup.php
 health.php
 

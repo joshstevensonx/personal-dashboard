@@ -181,7 +181,7 @@ foreach ($rows as $r) { $byPlat[$r['platform']][] = $r; }
 <script>
 // Update the address placeholder to match the chosen method.
 (function(){
-    var ph = <?php echo json_encode(array_map(fn($m) => $m['ph'], METHODS)); ?>;
+    var ph = <?php echo json_for_html(array_map(fn($m) => $m['ph'], METHODS)); ?>;
     var m = document.getElementById('method'), a = document.getElementById('address');
     if (m && a) m.addEventListener('change', function(){ a.placeholder = ph[m.value] || 'address / id'; });
 })();
