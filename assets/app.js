@@ -20,56 +20,39 @@
   }
 
   /* ------------------------------------------------------------------ theme */
-  // data-theme on <html>: auto | dark | light. 'auto' follows the OS.
-  function effectiveTheme() {
-    var t = document.documentElement.getAttribute('data-theme');
-    if (t === 'dark' || t === 'light') return t;
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  }
-  function applyAutoInversion() {
-    // The chosen preset supplies colours. For 'auto'/'light' on a dark preset we
-    // flip a readable light palette so the app is usable either way.
-    var mode = effectiveTheme();
+  // data-theme is the user's choice (auto|light|dark); data-mode is the
+  // resolved result that the token layer actually styles from.
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function resolveMode() {
+    var choice = document.documentElement.getAttribute('data-theme') || 'auto';
+    var mode = choice === 'auto' ? (mq.matches ? 'dark' : 'light') : choice;
     document.documentElement.setAttribute('data-mode', mode);
-    if (mode === 'light' && document.documentElement.dataset.presetDark !== 'false') {
-      var s = document.documentElement.style;
-      if (!s.getPropertyValue('--bg-dark-cache')) {
-        s.setProperty('--bg-dark-cache', s.getPropertyValue('--bg') || '#0f1115');
-        s.setProperty('--panel-dark-cache', s.getPropertyValue('--panel') || '#181b22');
-        s.setProperty('--panel2-dark-cache', s.getPropertyValue('--panel2') || '#1f232c');
-        s.setProperty('--line-dark-cache', s.getPropertyValue('--line') || '#2a2f3a');
-        s.setProperty('--text-dark-cache', s.getPropertyValue('--text') || '#e7e9ee');
-        s.setProperty('--muted-dark-cache', s.getPropertyValue('--muted') || '#9aa3b2');
-      }
-      s.setProperty('--bg', '#f6f7f9'); s.setProperty('--panel', '#ffffff');
-      s.setProperty('--panel2', '#f0f2f5'); s.setProperty('--line', '#dfe3e8');
-      s.setProperty('--text', '#1c1f24'); s.setProperty('--muted', '#61697a');
-    } else {
-      var st = document.documentElement.style;
-      if (st.getPropertyValue('--bg-dark-cache')) {
-        st.setProperty('--bg', st.getPropertyValue('--bg-dark-cache'));
-        st.setProperty('--panel', st.getPropertyValue('--panel-dark-cache'));
-        st.setProperty('--panel2', st.getPropertyValue('--panel2-dark-cache'));
-        st.setProperty('--line', st.getPropertyValue('--line-dark-cache'));
-        st.setProperty('--text', st.getPropertyValue('--text-dark-cache'));
-        st.setProperty('--muted', st.getPropertyValue('--muted-dark-cache'));
-      }
-    }
+    return mode;
   }
+
   function toggleTheme() {
-    var cur = document.documentElement.getAttribute('data-theme');
-    var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
-    if (cur === next) next = (next === 'dark') ? 'light' : 'dark';
+    var next = resolveMode() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    applyAutoInversion();
+    resolveMode();
     fetch('api.php?action=set_setting', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
       body: JSON.stringify({ key: 'theme', value: next })
     }).catch(function () { /* offline is fine */ });
   }
-  applyAutoInversion();
-  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyAutoInversion);
+
+  resolveMode();
+  mq.addEventListener('change', resolveMode);
+
+  // Subtle divider under the top bar once the page scrolls.
+  var topbar = document.querySelector('.topbar');
+  if (topbar) {
+    var onScroll = function () { topbar.classList.toggle('scrolled', window.scrollY > 4); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 
   /* -------------------------------------------------------------- overlays */
   function openEl(el) { if (el) el.classList.add('open'); }

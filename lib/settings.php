@@ -7,14 +7,38 @@
 function setting_defaults(): array
 {
     return [
-        'theme'      => 'auto',      // auto | dark | light
-        'preset'     => 'midnight',  // midnight | slate | nord | paper
-        'accent'     => '#6ea8fe',
-        'density'    => 'comfortable',
-        'shortcuts'  => '{}',        // JSON: { "commandId": "key" }
-        'layout'     => '[]',        // JSON: ordered dashboard widget ids
-        'start_page' => 'index.php',
-        'ui_style'   => 'notion',    // notion | classic
+        // appearance
+        'theme'         => 'auto',        // auto | light | dark
+        'accent'        => '#2383e2',
+        'font'          => 'sans',        // sans | serif | mono
+        'font_size'     => 'lg',          // sm | md | lg | xl
+        'radius'        => 'soft',        // square | soft | round | pill
+        'page_width'    => 'normal',      // narrow | normal | wide | full
+        'density'       => 'comfortable', // comfortable | compact
+        'sidebar_width' => 'md',          // sm | md | lg
+        // behaviour
+        'shortcuts'     => '{}',
+        'layout'        => '[]',
+        'start_page'    => 'index.php',
+    ];
+}
+
+/** Named starting points for the appearance controls. */
+function theme_presets(): array
+{
+    return [
+        'default'  => ['label' => 'Default',  'accent' => '#2383e2', 'font' => 'sans',
+                       'radius' => 'soft',   'theme' => 'auto'],
+        'mono'     => ['label' => 'Mono',     'accent' => '#5f5e5b', 'font' => 'mono',
+                       'radius' => 'square', 'theme' => 'light'],
+        'editorial'=> ['label' => 'Editorial','accent' => '#9065b0', 'font' => 'serif',
+                       'radius' => 'round',  'theme' => 'light'],
+        'midnight' => ['label' => 'Midnight', 'accent' => '#6ea8fe', 'font' => 'sans',
+                       'radius' => 'round',  'theme' => 'dark'],
+        'forest'   => ['label' => 'Forest',   'accent' => '#0f7b6c', 'font' => 'sans',
+                       'radius' => 'soft',   'theme' => 'auto'],
+        'ember'    => ['label' => 'Ember',    'accent' => '#d9730d', 'font' => 'sans',
+                       'radius' => 'pill',   'theme' => 'dark'],
     ];
 }
 
@@ -60,21 +84,3 @@ function set_setting(string $key, $value): void
     $st->execute([$key, (string)$value]);
 }
 
-/** Built-in theme presets: [name => [bg, panel, panel2, line, text, muted, accent]] */
-function theme_presets(): array
-{
-    return [
-        'midnight' => ['label' => 'Midnight', 'dark' => true,
-            'vars' => ['bg' => '#0f1115', 'panel' => '#181b22', 'panel2' => '#1f232c',
-                       'line' => '#2a2f3a', 'text' => '#e7e9ee', 'muted' => '#9aa3b2']],
-        'slate'    => ['label' => 'Slate', 'dark' => true,
-            'vars' => ['bg' => '#111418', 'panel' => '#1b1f26', 'panel2' => '#232832',
-                       'line' => '#313846', 'text' => '#e3e7ee', 'muted' => '#98a2b3']],
-        'nord'     => ['label' => 'Nord', 'dark' => true,
-            'vars' => ['bg' => '#2e3440', 'panel' => '#3b4252', 'panel2' => '#434c5e',
-                       'line' => '#4c566a', 'text' => '#eceff4', 'muted' => '#b3bccb']],
-        'paper'    => ['label' => 'Paper', 'dark' => false,
-            'vars' => ['bg' => '#f6f7f9', 'panel' => '#ffffff', 'panel2' => '#f0f2f5',
-                       'line' => '#dfe3e8', 'text' => '#1c1f24', 'muted' => '#61697a']],
-    ];
-}

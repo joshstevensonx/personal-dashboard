@@ -16,10 +16,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error = 'Wrong username or password.';
 }
 ?><!doctype html>
-<html lang="en"><head>
+<html lang="en" data-theme="auto"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sign in &middot; <?= e(APP_NAME) ?></title>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/tokens.css">
+<link rel="stylesheet" href="assets/base.css">
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/responsive.css">
+<script>document.documentElement.setAttribute('data-mode',
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');</script>
 </head><body>
 <form class="login" method="post">
     <h1><?= e(APP_NAME) ?></h1>

@@ -133,54 +133,54 @@ function command_model(): array
     return $cmds;
 }
 
-/** Build the inline CSS variables for the active theme preset + accent. */
-function theme_style_attr(): string
-{
-    $presets = theme_presets();
-    $key = (string)setting('preset');
-    $p = $presets[$key] ?? $presets['midnight'];
-    $accent = (string)setting('accent');
-    if (!preg_match('/^#[0-9a-f]{6}$/i', $accent)) {
-        $accent = '#6ea8fe';
-    }
-    // Choose readable ink for buttons based on accent luminance.
-    $r = hexdec(substr($accent, 1, 2)); $g = hexdec(substr($accent, 3, 2)); $b = hexdec(substr($accent, 5, 2));
-    $lum = (0.2126 * $r + 0.7152 * $g + 0.0722 * $b) / 255;
-    $ink = $lum > 0.6 ? '#101418' : '#06101f';
 
-    $css = '';
-    foreach ($p['vars'] as $k => $v) {
-        $css .= "--$k:$v;";
-    }
-    $css .= "--accent:$accent;--accent-ink:$ink;";
-    return $css;
+/**
+ * Every customisable dimension is expressed as a data-* attribute on <html>,
+ * which the token layer reads. One attribute change restyles the whole app.
+ */
+function ui_attributes(): string
+{
+    $pick = function (string $key, array $allowed, string $default) {
+        $v = (string)setting($key);
+        return in_array($v, $allowed, true) ? $v : $default;
+    };
+    $attrs = [
+        'data-theme'   => $pick('theme',   ['auto', 'light', 'dark'], 'auto'),
+        'data-font'    => $pick('font',    ['sans', 'serif', 'mono'], 'sans'),
+        'data-size'    => $pick('font_size', ['sm', 'md', 'lg', 'xl'], 'lg'),
+        'data-radius'  => $pick('radius',  ['square', 'soft', 'round', 'pill'], 'soft'),
+        'data-width'   => $pick('page_width', ['narrow', 'normal', 'wide', 'full'], 'normal'),
+        'data-density' => $pick('density', ['comfortable', 'compact'], 'comfortable'),
+        'data-sidebar' => $pick('sidebar_width', ['sm', 'md', 'lg'], 'md'),
+    ];
+    $out = '';
+    foreach ($attrs as $k => $v) { $out .= " $k='" . e($v) . "'"; }
+    return $out;
 }
 
 function page_header(string $active = ''): void
 {
-    $theme = (string)setting('theme');       // auto | dark | light
-    $density = (string)setting('density');
-    $style = theme_style_attr();
     $name = e(APP_NAME);
-    $cmds = json_for_html(command_model());
-    $shortcuts = json_for_html(setting_json('shortcuts', []));
+    $accent = (string)setting('accent');
+    if (!preg_match('/^#[0-9a-f]{6}$/i', $accent)) { $accent = '#2383e2'; }
 
-    echo "<!doctype html><html lang='en' data-theme='" . e($theme) . "' data-density='" . e($density) . "' style='" . e($style) . "'><head>";
+    echo "<!doctype html><html lang='en'" . ui_attributes()
+       . " style='--accent:" . e($accent) . "'><head>";
     echo "<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, viewport-fit=cover'>";
     echo "<title>$name</title>";
-    echo "<link rel='stylesheet' href='assets/style.css'>";
-    echo "<link rel='stylesheet' href='assets/notion.css'>";
+    // Load order matters: tokens define the variables, base and app consume
+    // them, responsive adjusts. No layer overrides another's colours.
+    echo "<link rel='stylesheet' href='assets/tokens.css'>";
+    echo "<link rel='stylesheet' href='assets/base.css'>";
+    echo "<link rel='stylesheet' href='assets/app.css'>";
     echo "<link rel='stylesheet' href='assets/responsive.css'>";
     echo "<link rel='manifest' href='manifest.webmanifest'>";
-    echo "<meta name='theme-color' content='" . e((string)setting('accent')) . "'>";
+    echo "<meta name='theme-color' content='" . e($accent) . "'>";
     echo "<meta name='apple-mobile-web-app-capable' content='yes'>";
     echo "<meta name='apple-mobile-web-app-title' content='$name'>";
     echo "<link rel='apple-touch-icon' href='assets/icons/icon-180.png'>";
     echo "<link rel='icon' href='assets/icons/icon-192.png'>";
-    // The Notion layer is opt-out: assets/notion.css is scoped to body.notion,
-    // so switching this setting to "classic" restores the original shell.
-    $bodyClass = setting('ui_style') === 'classic' ? '' : ' class="notion"';
-    echo "</head><body$bodyClass>";
+    echo "</head><body>";
 
     echo "<div class='app'>";
 
