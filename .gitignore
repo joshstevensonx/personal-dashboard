@@ -1,0 +1,24 @@
+# --- Live data — NEVER commit; a deploy would overwrite the real database ---
+data/
+data/*.sqlite
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
+data/backups/
+uploads/
+
+# --- Secrets ---
+# config.php holds your password hash and email address.
+# Keep the real one on the server only; commit config.sample.php instead.
+config.php
+
+# --- Setup helpers that must not stay on a live site ---
+setup.php
+health.php
+
+# --- OS / editor noise ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
