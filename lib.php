@@ -2,7 +2,7 @@
 /**
  * Shared helpers: sessions, auth, CSRF, escaping, flash messages, date math.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/bootstrap.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lib/settings.php';
 

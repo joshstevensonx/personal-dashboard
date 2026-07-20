@@ -5,8 +5,6 @@
  */
 require_once __DIR__ . '/lib.php';
 require_once __DIR__ . '/lib/pages.php';
-require_once __DIR__ . '/lib/notion_import.php';
-require_once __DIR__ . '/lib/notion_api.php';
 require_once __DIR__ . '/partials.php';
 require_login();
 $pdo = db();
@@ -14,6 +12,44 @@ $pdo = db();
 $result = null;
 $scan = null;
 $error = '';
+
+/* --------------------------------------------------------------------------
+ * This page depends on optional files and PHP extensions. Rather than fataling
+ * with a blank 500 when something is missing, collect the problems and show
+ * them. Anything still working stays usable.
+ * -------------------------------------------------------------------------- */
+$blockers = [];
+
+foreach (['lib/notion_import.php', 'lib/notion_api.php'] as $need) {
+    $path = __DIR__ . '/' . $need;
+    if (is_file($path)) {
+        require_once $path;
+    } else {
+        $blockers[] = "Missing file: <code>$need</code> — upload it to the server.";
+    }
+}
+if (!class_exists('DOMDocument')) {
+    $blockers[] = 'The PHP <code>dom</code> extension is not enabled. '
+                . 'Enable it in Plesk → PHP Settings (it parses the Notion export).';
+}
+if (!function_exists('curl_init')) {
+    $blockers[] = 'The PHP <code>curl</code> extension is not enabled. '
+                . 'Only the API sync needs it — file import still works.';
+}
+
+/** Does the pages table have the Notion provenance column yet? */
+$hasNotionCol = false;
+try {
+    foreach ($pdo->query("PRAGMA table_info(pages)") as $c) {
+        if ($c['name'] === 'notion_id') { $hasNotionCol = true; break; }
+    }
+} catch (Throwable $e) { /* reported below */ }
+if (!$hasNotionCol) {
+    $blockers[] = 'The database is missing the <code>notion_id</code> column — '
+                . 'the schema upgrade has not run. Reload any other page once, then come back.';
+}
+
+$canImport = empty(array_filter($blockers, fn($b) => !str_contains($b, 'curl')));
 
 /** Where uploaded/extracted exports live (outside the web root when possible). */
 function import_workdir(): string
@@ -24,7 +60,7 @@ function import_workdir(): string
     return $dir;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canImport) {
     check_csrf();
     $a = $_POST['action'] ?? '';
 
@@ -96,7 +132,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $token = (string)setting('notion_token', '');
-$imported = $pdo->query("SELECT COUNT(*) FROM pages WHERE notion_id IS NOT NULL AND archived = 0")->fetchColumn();
+$imported = 0;
+if ($hasNotionCol) {
+    try {
+        $imported = (int)$pdo->query("SELECT COUNT(*) FROM pages
+                                      WHERE notion_id IS NOT NULL AND archived = 0")->fetchColumn();
+    } catch (Throwable $e) { $imported = 0; }
+}
 $topPages = $pdo->query("SELECT id, title FROM pages WHERE parent_id IS NULL AND archived = 0 ORDER BY title")->fetchAll();
 
 // A sensible default path: the folder the user most likely extracted to.
@@ -111,6 +153,15 @@ page_header('import.php');
 <h1>Import from Notion</h1>
 <p class="sub">Bring your Notion workspace in as native pages and databases.
    Imported pages render with Notion's own stylesheet, so they look the same.</p>
+
+<?php if ($blockers): ?>
+    <div class="flash" style="background:var(--warn-soft);border-color:var(--warn);color:var(--warn)">
+        <strong>This page can't run yet:</strong>
+        <ul style="margin:6px 0 0;padding-left:1.2em">
+            <?php foreach ($blockers as $b): ?><li><?= $b ?></li><?php endforeach; ?>
+        </ul>
+    </div>
+<?php endif; ?>
 
 <?php if ($error): ?>
     <div class="flash" style="background:var(--danger-soft);border-color:var(--danger);color:var(--danger)">

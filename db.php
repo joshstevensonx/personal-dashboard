@@ -4,7 +4,7 @@
  * Schema is applied by the migration runner (lib/migrations.php) — forward-only
  * and additive, so existing data is never dropped or rewritten.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/bootstrap.php';
 require_once __DIR__ . '/lib/migrations.php';
 
 function db(): PDO

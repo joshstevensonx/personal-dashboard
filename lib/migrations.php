@@ -392,15 +392,6 @@ function migration_list(): array
                 $pdo->exec("ALTER TABLE blocks ADD COLUMN indent INTEGER NOT NULL DEFAULT 0");
             }
 
-            // Notion provenance, so a re-import updates instead of duplicating.
-            if (!in_array('notion_id', $cols, true)) {
-                $pdo->exec("ALTER TABLE pages ADD COLUMN notion_id TEXT");
-                $pdo->exec("CREATE INDEX IF NOT EXISTS idx_pages_notion ON pages(notion_id)");
-            }
-            if (!in_array('notion_synced_at', $cols, true)) {
-                $pdo->exec("ALTER TABLE pages ADD COLUMN notion_synced_at TEXT");
-            }
-
             // Seed one default view for every existing database page so the
             // multi-view UI has something to show immediately.
             $dbs = $pdo->query("SELECT id, db_view, db_group_by FROM pages WHERE is_database = 1")->fetchAll();
@@ -414,6 +405,21 @@ function migration_list(): array
                     $ins->execute([$d['id'], ucfirst($type), $type, $d['db_group_by']]);
                 }
             }
+        }],
+
+        9 => ['notion_provenance', function (PDO $pdo) {
+            // Kept separate from migration 8 on purpose: version 8 had already
+            // been applied on live installs, so columns added there would never
+            // have run. New schema work always gets a new version number.
+            $cols = [];
+            foreach ($pdo->query("PRAGMA table_info(pages)") as $c) { $cols[] = $c['name']; }
+            if (!in_array('notion_id', $cols, true)) {
+                $pdo->exec("ALTER TABLE pages ADD COLUMN notion_id TEXT");
+            }
+            if (!in_array('notion_synced_at', $cols, true)) {
+                $pdo->exec("ALTER TABLE pages ADD COLUMN notion_synced_at TEXT");
+            }
+            $pdo->exec("CREATE INDEX IF NOT EXISTS idx_pages_notion ON pages(notion_id)");
         }],
     ];
 }

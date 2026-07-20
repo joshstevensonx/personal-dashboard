@@ -7,7 +7,7 @@
  * The token is shown on calendar.php. Treat the URL as a secret: anyone with it
  * can read your event and task titles. Regenerate it there if it leaks.
  */
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/bootstrap.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lib/ics.php';
 
