@@ -345,6 +345,67 @@ function migration_list(): array
                 PRIMARY KEY (page_id, key)
             );
         "],
+
+        8 => ['notion_advanced', function (PDO $pdo) {
+            // Comments, anchored to a page and optionally to a single block.
+            $pdo->exec("CREATE TABLE IF NOT EXISTS page_comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                page_id INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+                block_id INTEGER REFERENCES blocks(id) ON DELETE CASCADE,
+                body TEXT NOT NULL,
+                resolved INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )");
+            $pdo->exec("CREATE INDEX IF NOT EXISTS idx_comments_page ON page_comments(page_id)");
+
+            // Multiple saved views per database, each with its own config.
+            $pdo->exec("CREATE TABLE IF NOT EXISTS db_views (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                database_id INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+                name TEXT NOT NULL DEFAULT 'Table',
+                type TEXT NOT NULL DEFAULT 'table',
+                group_by TEXT,
+                sort_key TEXT,
+                sort_dir TEXT NOT NULL DEFAULT 'asc',
+                filter_key TEXT,
+                filter_op TEXT NOT NULL DEFAULT 'contains',
+                filter_value TEXT,
+                hidden_props TEXT,
+                position INTEGER NOT NULL DEFAULT 0
+            )");
+            $pdo->exec("CREATE INDEX IF NOT EXISTS idx_views_db ON db_views(database_id, position)");
+
+            // Additive columns — ALTER TABLE ADD COLUMN fails if it already
+            // exists, so each is guarded.
+            $cols = [];
+            foreach ($pdo->query("PRAGMA table_info(pages)") as $c) { $cols[] = $c['name']; }
+            if (!in_array('is_template', $cols, true)) {
+                $pdo->exec("ALTER TABLE pages ADD COLUMN is_template INTEGER NOT NULL DEFAULT 0");
+            }
+            if (!in_array('locked', $cols, true)) {
+                $pdo->exec("ALTER TABLE pages ADD COLUMN locked INTEGER NOT NULL DEFAULT 0");
+            }
+
+            $bcols = [];
+            foreach ($pdo->query("PRAGMA table_info(blocks)") as $c) { $bcols[] = $c['name']; }
+            if (!in_array('indent', $bcols, true)) {
+                $pdo->exec("ALTER TABLE blocks ADD COLUMN indent INTEGER NOT NULL DEFAULT 0");
+            }
+
+            // Seed one default view for every existing database page so the
+            // multi-view UI has something to show immediately.
+            $dbs = $pdo->query("SELECT id, db_view, db_group_by FROM pages WHERE is_database = 1")->fetchAll();
+            $ins = $pdo->prepare("INSERT INTO db_views (database_id, name, type, group_by, position)
+                                  VALUES (?,?,?,?,0)");
+            foreach ($dbs as $d) {
+                $have = $pdo->prepare("SELECT COUNT(*) FROM db_views WHERE database_id = ?");
+                $have->execute([$d['id']]);
+                if ((int)$have->fetchColumn() === 0) {
+                    $type = $d['db_view'] ?: 'table';
+                    $ins->execute([$d['id'], ucfirst($type), $type, $d['db_group_by']]);
+                }
+            }
+        }],
     ];
 }
 

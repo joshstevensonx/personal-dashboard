@@ -170,6 +170,7 @@ function page_header(string $active = ''): void
     echo "<title>$name</title>";
     echo "<link rel='stylesheet' href='assets/style.css'>";
     echo "<link rel='stylesheet' href='assets/notion.css'>";
+    echo "<link rel='stylesheet' href='assets/responsive.css'>";
     echo "<link rel='manifest' href='manifest.webmanifest'>";
     echo "<meta name='theme-color' content='" . e((string)setting('accent')) . "'>";
     echo "<meta name='apple-mobile-web-app-capable' content='yes'>";

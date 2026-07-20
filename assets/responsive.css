@@ -1,0 +1,209 @@
+/* ==========================================================================
+   Responsive layer — mobile-first behaviour for the whole app.
+   Loaded last so it can adjust both style.css and notion.css.
+
+   Breakpoints:  ≤640 phone   641–1024 tablet   ≥1025 desktop
+   ========================================================================== */
+
+/* Respect notches and home indicators on iPhone. */
+@supports (padding: max(0px)) {
+  body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+}
+
+/* Never let a wide element force the page to scroll sideways. */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video, iframe, canvas, table, pre { max-width: 100%; }
+
+/* Bigger hit targets on touch devices. */
+@media (hover: none) and (pointer: coarse) {
+  button, .pill, .nbtn, .db-tab, .tree-link, .sidebar nav a {
+    min-height: 40px;
+  }
+  .bk-handles { opacity: 1 !important; }   /* no hover on touch, so always show */
+  .kcard .klink { opacity: .8; }
+}
+
+/* =========================================================== phone ≤640px */
+@media (max-width: 640px) {
+
+  /* ---- sidebar becomes a slide-over drawer ---- */
+  .sidebar,
+  body.notion .sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 60;
+    width: min(84vw, 300px); flex-basis: min(84vw, 300px);
+    transform: translateX(-102%);
+    transition: transform .22s cubic-bezier(.4,0,.2,1);
+    box-shadow: none;
+    padding-top: env(safe-area-inset-top);
+  }
+  body.nav-open .sidebar,
+  body.notion.nav-open .sidebar { transform: none; box-shadow: 0 0 40px rgba(0,0,0,.35); }
+
+  body.nav-open::after {
+    content: ''; position: fixed; inset: 0; z-index: 55;
+    background: rgba(15,17,21,.45); backdrop-filter: blur(1px);
+  }
+
+  .menubtn { display: block; }
+
+  /* ---- top bar ---- */
+  .topbar, body.notion .topbar {
+    position: sticky; top: 0; z-index: 40;
+    padding: 8px 10px; gap: 8px;
+    padding-top: calc(8px + env(safe-area-inset-top));
+    border-bottom: 1px solid var(--n-line, var(--line));
+    background: var(--n-bg, var(--panel));
+  }
+  .searchbtn { min-width: 0; flex: 1; }
+  .searchbtn .k { display: none; }          /* ⌘K is meaningless on a phone */
+
+  /* ---- page canvas ---- */
+  main { padding: 14px 0 80px; }
+  .page-wrap, body.notion .page-wrap { padding: 0 16px; max-width: 100%; }
+  .page-cover { height: 120px; }
+  .page-icon { font-size: 54px; margin-top: -28px; }
+  .page-title, body.notion .page-title { font-size: 28px; }
+  h1 { font-size: 20px; }
+  .crumbs { font-size: 12.5px; overflow-x: auto; white-space: nowrap;
+            scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .crumbs::-webkit-scrollbar { display: none; }
+
+  /* Block handles sit inline on narrow screens instead of hanging off-canvas. */
+  .bk-handles { position: static; opacity: 1; flex-direction: row; margin-right: 2px; }
+  .bk { gap: 4px; }
+  .blocks { padding-bottom: 24vh; }
+
+  /* ---- cards + grids collapse to one column ---- */
+  .grid { grid-template-columns: 1fr !important; gap: 12px; }
+  .card { padding: 14px; }
+  .card .big { font-size: 26px; }
+
+  /* ---- forms stack ---- */
+  form.row { flex-direction: column; align-items: stretch; gap: 10px; }
+  form.row .field { width: 100%; min-width: 0 !important; }
+  form.row input, form.row select, form.row textarea { width: 100%; min-width: 0; }
+  form.row button { width: 100%; }
+  /* Keep genuinely inline mini-forms inline (delete ✕, toggles, etc.). */
+  form.row.inline, .item form, .db-tabs form, .habit-toggle { flex-direction: row; width: auto; }
+  .item form button, .db-tabs form button { width: auto; }
+  /* 16px prevents iOS Safari from zooming the viewport on focus. */
+  input, select, textarea { font-size: 16px; }
+
+  /* ---- lists ---- */
+  .item { flex-wrap: wrap; padding: 10px 12px; }
+  .item .grow { flex: 1 1 100%; min-width: 0; }
+  .list { gap: 8px; }
+
+  /* ---- database views ---- */
+  .db-tabs { overflow-x: auto; white-space: nowrap; scrollbar-width: none; gap: 4px; }
+  .db-tabs::-webkit-scrollbar { display: none; }
+  .db-toolform { flex: 0 0 auto; }
+  .db-table { font-size: 13px; min-width: 560px; }   /* scrolls inside its wrapper */
+  .db-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch;
+               margin: 0 -16px; padding: 0 16px; }
+  .db-board { gap: 10px; margin: 0 -16px; padding: 12px 16px 8px;
+              scroll-snap-type: x mandatory; }
+  .db-col { flex-basis: 78vw; scroll-snap-align: start; }
+  .db-gallery { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .cal { gap: 3px; }
+  .cal .day { min-height: 58px; padding: 4px 5px; }
+  .cal .ev { font-size: 10px; padding: 1px 4px; }
+  .cal .dow { font-size: 10px; }
+
+  /* ---- notes editor: stack the split view ---- */
+  .editor.split { grid-template-columns: 1fr; }
+  .editor.split .preview { max-height: 40vh; }
+  .notes-layout { grid-template-columns: 1fr !important; }
+
+  /* ---- overlays go full-width ---- */
+  .palette { width: 94vw; }
+  .palette-wrap { padding-top: 8vh; }
+  .slash { width: min(94vw, 312px); }
+  .picker { width: min(94vw, 320px); }
+  .sheet { width: 94vw; padding: 18px; }
+
+  footer { padding: 0 16px 24px; }
+  .kbd-hint { display: none; }              /* no physical keyboard */
+}
+
+/* ========================================================== tablet 641–1024 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .sidebar, body.notion .sidebar { width: 210px; flex-basis: 210px; }
+  .page-wrap, body.notion .page-wrap { padding: 0 40px; }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .db-col { flex-basis: 240px; }
+  main { padding: 20px 16px 60px; }
+  .db-scroll { overflow-x: auto; }
+}
+
+/* ============================================================ desktop ≥1025 */
+@media (min-width: 1025px) {
+  .menubtn { display: none; }
+  .db-scroll { overflow-x: auto; }
+}
+
+/* ---- landscape phones: reclaim vertical space ---- */
+@media (max-height: 480px) and (orientation: landscape) {
+  .page-cover { height: 80px; }
+  .page-icon { font-size: 40px; margin-top: -20px; }
+  .palette-wrap { padding-top: 4vh; }
+  .palette ul { max-height: 40vh; }
+}
+
+/* ---- print ---- */
+@media print {
+  .sidebar, .topbar, footer, .palette-wrap, .sheet-wrap,
+  .page-actions, .bk-handles, .db-tabs, .saving { display: none !important; }
+  .page-wrap { max-width: none; padding: 0; }
+  body { background: #fff; color: #000; }
+}
+
+/* ---- users who prefer less motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   New block types (used at every breakpoint)
+   ========================================================================== */
+.bk-bookmark { display: flex; flex-direction: column; gap: 2px; border: 1px solid var(--n-line, var(--line));
+  border-radius: 6px; padding: 12px 14px; text-decoration: none; color: inherit; }
+.bk-bookmark:hover { background: var(--n-hover, var(--panel2)); text-decoration: none; }
+.bk-bm-title { font-weight: 600; font-size: 14px; }
+.bk-bm-url { font-size: 12px; color: var(--n-muted, var(--muted)); word-break: break-all; }
+
+.bk-embed { position: relative; padding-top: 56.25%; border-radius: 6px; overflow: hidden;
+  background: var(--n-hover, var(--panel2)); }
+.bk-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+.bk-toc { border-left: 2px solid var(--n-line, var(--line)); padding: 4px 0 4px 12px; }
+.bk-toc a { display: block; padding: 2px 0; color: var(--n-text, var(--text)); text-decoration: none;
+  font-size: 14px; }
+.bk-toc a:hover { text-decoration: underline; }
+.bk-toc a.lvl2 { padding-left: 14px; font-size: 13.5px; }
+.bk-toc a.lvl3 { padding-left: 28px; font-size: 13px; color: var(--n-muted, var(--muted)); }
+
+.bk-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.bk-columns .bk-col-edit { grid-column: 1 / -1; }
+@media (max-width: 640px) { .bk-columns { grid-template-columns: 1fr; gap: 8px; } }
+
+.bk-equation { text-align: center; font-family: var(--n-mono, monospace); font-size: 15px;
+  background: var(--n-hover, var(--panel2)); border-radius: 6px; padding: 12px; }
+
+/* ---- comments ---- */
+.comments { border-top: 1px solid var(--n-line, var(--line)); margin-top: 28px; padding-top: 18px; }
+.comment { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--n-line, var(--line)); }
+.comment.resolved { opacity: .5; }
+.comment-body { flex: 1; min-width: 0; font-size: 14px; word-break: break-word; }
+.comment-meta { font-size: 12px; color: var(--n-muted, var(--muted)); margin-top: 2px; }
+
+/* ---- relation chips ---- */
+.rel-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--n-hover, var(--panel2));
+  border-radius: 4px; padding: 1px 7px; font-size: 12.5px; margin: 1px 3px 1px 0;
+  text-decoration: none; color: inherit; }
+.rel-chip:hover { text-decoration: underline; }
+.computed { color: var(--n-muted, var(--muted)); font-variant-numeric: tabular-nums; }

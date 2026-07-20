@@ -439,15 +439,43 @@
       if (!panel.hidden && !panel.contains(ev.target) && ev.target !== addProp) panel.hidden = true;
     });
     var typeSel = document.getElementById('proptype');
-    var optsField = document.getElementById('propopts');
-    if (typeSel && optsField) {
+    if (typeSel) {
+      // Only show the fields that belong to the chosen property type.
+      var groups = {
+        propopts:    ['select', 'multi'],
+        proprel:     ['relation'],
+        proprollup:  ['rollup'],
+        propformula: ['formula']
+      };
       var sync = function () {
-        optsField.style.display = (typeSel.value === 'select' || typeSel.value === 'multi') ? '' : 'none';
+        Object.keys(groups).forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.style.display = groups[id].indexOf(typeSel.value) !== -1 ? '' : 'none';
+        });
       };
       typeSel.addEventListener('change', sync);
       sync();
     }
   }
+
+  /* panel toggles: move page, add view, configure view */
+  function panelToggle(btnId, panelId, width) {
+    var b = document.getElementById(btnId), p = document.getElementById(panelId);
+    if (!b || !p) return;
+    b.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var r = b.getBoundingClientRect();
+      p.style.left = Math.max(8, Math.min(r.left, window.innerWidth - (width || 300))) + 'px';
+      p.style.top = (r.bottom + window.scrollY + 6) + 'px';
+      p.hidden = !p.hidden;
+    });
+    document.addEventListener('click', function (ev) {
+      if (!p.hidden && !p.contains(ev.target) && ev.target !== b) p.hidden = true;
+    });
+  }
+  panelToggle('btn-move', 'movepicker', 300);
+  panelToggle('addview', 'viewpicker', 300);
+  panelToggle('editview', 'viewconfig', 290);
 
   // Submitting the "+ New row" input
   document.addEventListener('keydown', function (ev) {

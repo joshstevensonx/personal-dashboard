@@ -25,7 +25,28 @@ function block_types(): array
         'code'      => ['label' => 'Code',            'icon' => '{}', 'hint' => 'Capture a code snippet.'],
         'divider'   => ['label' => 'Divider',         'icon' => '—',  'hint' => 'Visually divide blocks.'],
         'image'     => ['label' => 'Image',           'icon' => '🖼', 'hint' => 'Embed an image by URL.'],
+        'bookmark'  => ['label' => 'Web bookmark',    'icon' => '🔖', 'hint' => 'Save a link as a visual card.'],
+        'embed'     => ['label' => 'Embed',           'icon' => '⧉',  'hint' => 'Embed a video or iframe by URL.'],
+        'toc'       => ['label' => 'Table of contents','icon' => '≡', 'hint' => 'Auto-generated from headings.'],
+        'columns'   => ['label' => 'Two columns',     'icon' => '▥',  'hint' => 'Side-by-side text, split with |.'],
+        'equation'  => ['label' => 'Equation',        'icon' => '∑',  'hint' => 'Display a formula.'],
+        'breadcrumb'=> ['label' => 'Breadcrumb',      'icon' => '›',  'hint' => 'Show this page\'s location.'],
     ];
+}
+
+/** Which embed providers get a proper iframe (everything else becomes a link). */
+function embed_src(string $url): ?string
+{
+    $u = trim($url);
+    if ($u === '' || preg_match('/^\s*(javascript|vbscript|data)\s*:/i', $u)) return null;
+    if (preg_match('~(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{6,})~i', $u, $m)) {
+        return 'https://www.youtube-nocookie.com/embed/' . $m[1];
+    }
+    if (preg_match('~vimeo\.com/(\d+)~i', $u, $m)) {
+        return 'https://player.vimeo.com/video/' . $m[1];
+    }
+    if (preg_match('~^https?://~i', $u)) return $u;
+    return null;
 }
 
 /** Cover gradients — no image hosting needed. */
@@ -444,6 +465,55 @@ function render_block(array $b): string
                    . htmlspecialchars((string)$b['content'], ENT_QUOTES, 'UTF-8') . "</code></pre>";
             break;
         case 'divider': $inner = "<hr class='bk-divider'>"; break;
+
+        case 'bookmark': {
+            $url = trim((string)$b['content']);
+            if ($url !== '' && !preg_match('/^\s*(javascript|vbscript|data)\s*:/i', $url)) {
+                $href = preg_match('~^https?://~i', $url) ? $url : 'https://' . $url;
+                $host = parse_url($href, PHP_URL_HOST) ?: $href;
+                $inner = "<a class='bk-bookmark' href='" . htmlspecialchars($href, ENT_QUOTES) . "' target='_blank' rel='noopener'>"
+                       . "<span class='bk-bm-title'>" . htmlspecialchars($host, ENT_QUOTES) . "</span>"
+                       . "<span class='bk-bm-url'>" . htmlspecialchars($href, ENT_QUOTES) . "</span></a>";
+            } else {
+                $inner = "<div class='bk-image-empty'>" . $editable() . "</div>";
+            }
+            break;
+        }
+
+        case 'embed': {
+            $src = embed_src((string)$b['content']);
+            if ($src) {
+                $inner = "<div class='bk-embed'><iframe src='" . htmlspecialchars($src, ENT_QUOTES) . "' "
+                       . "loading='lazy' allowfullscreen referrerpolicy='no-referrer' "
+                       . "sandbox='allow-scripts allow-same-origin allow-presentation'></iframe></div>";
+            } else {
+                $inner = "<div class='bk-image-empty'>" . $editable() . "</div>";
+            }
+            break;
+        }
+
+        case 'toc':
+            // Filled in by page.php, which knows the whole block list.
+            $inner = "<div class='bk-toc' data-toc='1'><span class='muted'>Table of contents</span></div>";
+            break;
+
+        case 'columns': {
+            // Content is split on "|" into two columns.
+            $parts = explode('|', (string)$b['content'], 2);
+            $l = block_inline(trim($parts[0] ?? ''));
+            $r = block_inline(trim($parts[1] ?? ''));
+            $inner = "<div class='bk-columns'><div class='bk-col'>$l</div><div class='bk-col'>$r</div>"
+                   . "<div class='bk-col-edit'>" . $editable() . "</div></div>";
+            break;
+        }
+
+        case 'equation':
+            $inner = "<div class='bk-equation'>" . $editable() . "</div>";
+            break;
+
+        case 'breadcrumb':
+            $inner = "<div class='bk-crumb muted'>" . ($GLOBALS['__crumbHtml'] ?? 'Page location') . "</div>";
+            break;
         case 'image':
             $src = trim((string)$b['content']);
             if ($src !== '' && !preg_match('/^\s*(javascript|vbscript|data)\s*:/i', $src)) {
