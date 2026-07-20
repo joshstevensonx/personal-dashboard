@@ -7,7 +7,7 @@ A single, private web app that bundles four everyday tools behind one login:
 - **Important dates & countdowns** — birthdays, expiries, deadlines, with yearly-recurring support.
 - **Bookmarks & snippet vault** — searchable links and reusable copy-paste text.
 - **Remote access hub** — register your Mac / Windows / iPhone and launch remote-control
-  sessions from one place: builds `vnc://`, `rustdesk://`, and `jump://` launch links,
+  sessions from one place: builds `vn c://`, `rustdesk://`, and `jump://` launch links,
   opens Chrome Remote Desktop URLs, and generates a downloadable `.rdp` file for Windows
   (works on Mac + Windows). Store a "share note" to hand access to someone else. Includes
   a per-platform setup guide.
