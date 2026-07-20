@@ -1,9 +1,20 @@
 <?php
 require_once __DIR__ . '/lib.php';
+require_once __DIR__ . '/lib/tasks.php';
 require_once __DIR__ . '/partials.php';
 require_login();
 
 $pdo = db();
+
+// --- Tasks summary -----------------------------------------------------------
+$taskOpen    = (int)$pdo->query("SELECT COUNT(*) FROM tasks WHERE status IN ('open','doing')")->fetchColumn();
+$taskOverdue = (int)$pdo->query("SELECT COUNT(*) FROM tasks WHERE status IN ('open','doing') AND due_at IS NOT NULL AND date(due_at) < date('now')")->fetchColumn();
+$taskToday   = (int)$pdo->query("SELECT COUNT(*) FROM tasks WHERE status IN ('open','doing') AND date(due_at) = date('now')")->fetchColumn();
+$taskNext    = $pdo->query("SELECT title, due_at, priority FROM tasks WHERE status IN ('open','doing') AND due_at IS NOT NULL ORDER BY due_at LIMIT 4")->fetchAll();
+$doneWeek    = (int)$pdo->query("SELECT COUNT(*) FROM tasks WHERE status='done' AND date(completed_at) >= date('now','-7 day')")->fetchColumn();
+
+// --- Calendar summary --------------------------------------------------------
+$evNext = $pdo->query("SELECT title, start_at, all_day FROM events WHERE datetime(start_at) >= datetime('now','-2 hour') ORDER BY start_at LIMIT 4")->fetchAll();
 
 // --- Inbox summary -----------------------------------------------------------
 $inboxOpen = (int)$pdo->query("SELECT COUNT(*) FROM inbox WHERE done = 0")->fetchColumn();
@@ -45,6 +56,33 @@ page_header('index.php');
 <p class="sub"><?= date('l, F j, Y') ?></p>
 
 <div class="grid">
+
+    <div class="card">
+        <h2>Tasks</h2>
+        <div class="big"><?= $taskOpen ?><span class="muted" style="font-size:14px"> open</span></div>
+        <ul>
+            <?php foreach ($taskNext as $t): [$dl, $dc] = due_state($t['due_at']); ?>
+                <li><span class="grow" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e(mb_strimwidth($t['title'], 0, 34, '…')) ?></span><span class="pill <?= $dc ?>"><?= e($dl) ?></span></li>
+            <?php endforeach; ?>
+            <?php if (!$taskNext): ?><li class="muted">Nothing scheduled.</li><?php endif; ?>
+        </ul>
+        <div class="muted" style="font-size:13px">
+            <?= $taskOverdue ?> overdue · <?= $taskToday ?> today · <?= $doneWeek ?> done this week
+        </div>
+        <a class="cta" href="tasks.php">Open tasks →</a>
+    </div>
+
+    <div class="card">
+        <h2>Calendar</h2>
+        <div class="big"><?= count($evNext) ?><span class="muted" style="font-size:14px"> upcoming</span></div>
+        <ul>
+            <?php foreach ($evNext as $ev): ?>
+                <li><span class="grow" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e(mb_strimwidth($ev['title'], 0, 30, '…')) ?></span><span class="pill"><?= e($ev['all_day'] ? date('j M', strtotime($ev['start_at'])) : date('j M H:i', strtotime($ev['start_at']))) ?></span></li>
+            <?php endforeach; ?>
+            <?php if (!$evNext): ?><li class="muted">No upcoming events.</li><?php endif; ?>
+        </ul>
+        <a class="cta" href="calendar.php">Open calendar →</a>
+    </div>
 
     <div class="card">
         <h2>Quick-capture inbox</h2>

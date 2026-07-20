@@ -24,6 +24,19 @@ Plus a **daily email digest** (via cron) for anything renewing or due soon.
 - **Migration runner** — forward-only schema changes with an automatic pre-change DB backup
 - **JSON API** (`api.php`) for a future native client
 
+**Phase 2 — tasks & scheduling:**
+- **Tasks** with subtasks (unlimited nesting), P0–P3 priorities, statuses, notes, estimates
+- **Kanban board** per project with drag-and-drop (auto-saves)
+- **Tags** across tasks, with tag filtering and a tag cloud
+- **Projects** with auto-created board columns
+- **Filters** — open, today, next 7 days, overdue, done, all
+- **Recurring tasks** — completing one spawns the next occurrence, tags carried over
+- **Deadline tracking** — overdue/today/soon states everywhere
+- **Calendar** — month grid showing events *and* task due dates
+- **ICS subscription feed** (`ics.php`) — token-authenticated URL for Apple/Google Calendar
+- **Reminders** + a much richer daily cron briefing (overdue, due soon, events, renewals, dates)
+- **Auto-maintenance** — weekly DB snapshot, 30-day pruning, stale recurring tasks rolled forward
+
 > **How the remote hub works:** it's a launcher and directory, not a screen-streaming
 > server. The actual connection runs through the remote-access app you choose (RustDesk,
 > Chrome Remote Desktop, Microsoft Remote Desktop, VNC/Screen Sharing). A PHP host can't

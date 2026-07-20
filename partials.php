@@ -14,6 +14,10 @@ function nav_model(): array
             'index.php'     => ['Dashboard', '▦'],
             'inbox.php'     => ['Inbox', '⌁'],
         ],
+        'Plan' => [
+            'tasks.php'     => ['Tasks', '☑'],
+            'calendar.php'  => ['Calendar', '▤'],
+        ],
         'Track' => [
             'subscriptions.php' => ['Subscriptions', '↻'],
             'dates.php'         => ['Dates', '◷'],
@@ -39,6 +43,11 @@ function command_model(): array
         }
     }
     // Quick actions
+    $cmds[] = ['id' => 'new:task',     'label' => 'Add a task',             'group' => 'Create', 'icon' => '+', 'href' => 'tasks.php#new'];
+    $cmds[] = ['id' => 'new:event',    'label' => 'Add a calendar event',   'group' => 'Create', 'icon' => '+', 'href' => 'calendar.php#new'];
+    $cmds[] = ['id' => 'view:today',   'label' => 'Tasks due today',        'group' => 'Tasks',  'icon' => '☑', 'href' => 'tasks.php?filter=today'];
+    $cmds[] = ['id' => 'view:overdue', 'label' => 'Overdue tasks',          'group' => 'Tasks',  'icon' => '!', 'href' => 'tasks.php?filter=overdue'];
+    $cmds[] = ['id' => 'view:board',   'label' => 'Kanban board',           'group' => 'Tasks',  'icon' => '▥', 'href' => 'tasks.php?view=board'];
     $cmds[] = ['id' => 'new:capture',  'label' => 'Quick capture a note',   'group' => 'Create', 'icon' => '+', 'href' => 'inbox.php#new'];
     $cmds[] = ['id' => 'new:bookmark', 'label' => 'Save a bookmark',        'group' => 'Create', 'icon' => '+', 'href' => 'bookmarks.php#new'];
     $cmds[] = ['id' => 'new:sub',      'label' => 'Add a subscription',     'group' => 'Create', 'icon' => '+', 'href' => 'subscriptions.php#new'];
@@ -153,6 +162,8 @@ function page_footer(): void
                 <tr><td>Search (same)</td><td><kbd>/</kbd></td></tr>
                 <tr><td>This cheatsheet</td><td><kbd>?</kbd></td></tr>
                 <tr><td>Go to Dashboard</td><td><kbd>g</kbd> <kbd>d</kbd></td></tr>
+                <tr><td>Go to Tasks</td><td><kbd>g</kbd> <kbd>k</kbd></td></tr>
+                <tr><td>Go to Calendar</td><td><kbd>g</kbd> <kbd>c</kbd></td></tr>
                 <tr><td>Go to Inbox</td><td><kbd>g</kbd> <kbd>i</kbd></td></tr>
                 <tr><td>Go to Subscriptions</td><td><kbd>g</kbd> <kbd>s</kbd></td></tr>
                 <tr><td>Go to Dates</td><td><kbd>g</kbd> <kbd>t</kbd></td></tr>

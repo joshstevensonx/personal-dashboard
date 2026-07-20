@@ -166,7 +166,8 @@
   /* ------------------------------------------------------ keyboard shortcuts */
   var GOTO = {
     d: 'index.php', i: 'inbox.php', s: 'subscriptions.php',
-    t: 'dates.php', b: 'bookmarks.php', r: 'remote.php', ',': 'settings.php'
+    t: 'dates.php', b: 'bookmarks.php', r: 'remote.php', ',': 'settings.php',
+    k: 'tasks.php', c: 'calendar.php'
   };
   Object.keys(CUSTOM).forEach(function (k) { GOTO[k] = CUSTOM[k]; });
 

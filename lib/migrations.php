@@ -67,6 +67,91 @@ function migration_list(): array
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
         "],
+
+        3 => ['tasks_and_scheduling', "
+            CREATE TABLE IF NOT EXISTS projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                color TEXT,
+                view TEXT NOT NULL DEFAULT 'list',
+                position INTEGER NOT NULL DEFAULT 0,
+                archived INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS board_columns (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                name TEXT NOT NULL,
+                position INTEGER NOT NULL DEFAULT 0,
+                wip_limit INTEGER
+            );
+
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+                column_id INTEGER REFERENCES board_columns(id) ON DELETE SET NULL,
+                parent_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
+                title TEXT NOT NULL,
+                notes TEXT,
+                priority INTEGER NOT NULL DEFAULT 2,
+                status TEXT NOT NULL DEFAULT 'open',
+                start_at TEXT,
+                due_at TEXT,
+                completed_at TEXT,
+                estimate_min INTEGER,
+                position INTEGER NOT NULL DEFAULT 0,
+                recurrence TEXT,
+                recurrence_parent_id INTEGER,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+            CREATE INDEX IF NOT EXISTS idx_tasks_due ON tasks(due_at);
+            CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_id);
+
+            CREATE TABLE IF NOT EXISTS tags (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                color TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS taggables (
+                tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+                item_type TEXT NOT NULL,
+                item_id INTEGER NOT NULL,
+                PRIMARY KEY (tag_id, item_type, item_id)
+            );
+
+            CREATE TABLE IF NOT EXISTS reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_type TEXT NOT NULL DEFAULT 'task',
+                item_id INTEGER NOT NULL,
+                remind_at TEXT NOT NULL,
+                method TEXT NOT NULL DEFAULT 'email',
+                sent_at TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                notes TEXT,
+                location TEXT,
+                start_at TEXT NOT NULL,
+                end_at TEXT,
+                all_day INTEGER NOT NULL DEFAULT 0,
+                recurrence TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_events_start ON events(start_at);
+
+            CREATE TABLE IF NOT EXISTS calendar_feeds (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                token TEXT UNIQUE NOT NULL,
+                scope TEXT NOT NULL DEFAULT 'all',
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+        "],
     ];
 }
 
