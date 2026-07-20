@@ -1,0 +1,220 @@
+/* ==========================================================================
+   NOTION-FAITHFUL RENDERING
+   Metrics lifted verbatim from Notion's own HTML-export stylesheet so imported
+   pages match the source. Colours are re-pointed at our tokens so dark mode
+   works — Notion's export is light-only.
+
+   Scope: .notion-page (imported page content). The app chrome is unaffected.
+   ========================================================================== */
+
+.notion-page {
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.5;
+  width: 100%;
+  /* Notion ships this exact stack in its export */
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Helvetica, "Apple Color Emoji", Arial, sans-serif,
+               "Segoe UI Emoji", "Segoe UI Symbol";
+}
+.notion-page.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.notion-page.mono  { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+
+/* ---- page header --------------------------------------------------------- */
+.notion-page .page-cover-image { display: block; object-fit: cover; width: 100%; max-height: 30vh; }
+.notion-page .page-header-icon { font-size: 78px; height: 78px; width: 78px; }
+.notion-page .page-header-icon-with-cover { margin-top: -0.72em; margin-left: 0; }
+.notion-page .page-header-icon img { border-radius: 3px; }
+.notion-page .page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 0.75em;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.notion-page .page-description { margin-bottom: 2em; color: var(--text-muted); }
+
+/* ---- headings ------------------------------------------------------------ */
+.notion-page h1, .notion-page h2, .notion-page h3 {
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+.notion-page h1 { font-size: 1.875rem; margin-top: 1.875rem; }
+.notion-page h2 { font-size: 1.5rem;   margin-top: 1.5rem; }
+.notion-page h3 { font-size: 1.25rem;  margin-top: 1.25rem; }
+
+/* ---- text ---------------------------------------------------------------- */
+.notion-page p { margin-top: 0.5em; margin-bottom: 0; }
+.notion-page a { color: inherit; text-decoration: underline; }
+.notion-page strong { font-weight: 600; }
+.notion-page .indented { padding-left: 1.5em; }
+.notion-page hr {
+  background: transparent;
+  display: block;
+  width: 100%;
+  height: 1px;
+  visibility: visible;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  margin: 6px 0;
+}
+
+/* ---- lists --------------------------------------------------------------- */
+.notion-page ul, .notion-page ol { margin: 0; margin-block-start: 0.6em; margin-block-end: 0.6em; }
+.notion-page ul > li { list-style: disc; }
+.notion-page ul.to-do-list { text-decoration: none; padding-inline-start: 0; }
+.notion-page ul.to-do-list > li { list-style: none; }
+.notion-page .to-do-children-checked { text-decoration: line-through; opacity: .55; }
+.notion-page ul.toggle > li { list-style: none; }
+.notion-page ul.toggle { padding-inline-start: 0; }
+.notion-page ol { counter-reset: item; }
+.notion-page ol > li { list-style: none; }
+.notion-page ol > li:before { content: counter(item) ". "; counter-increment: item; }
+.notion-page li > p { margin: 0; }
+.notion-page .checkbox { display: inline-flex; width: 16px; height: 16px;
+  margin-right: 6px; vertical-align: -3px; border-radius: 3px; flex: 0 0 auto; }
+.notion-page .checkbox-on  { background: var(--accent); color: #fff;
+  align-items: center; justify-content: center; font-size: 11px; }
+.notion-page .checkbox-off { border: 1.3px solid var(--border-strong); }
+
+/* ---- quote / callout ----------------------------------------------------- */
+.notion-page blockquote {
+  font-size: 1em;
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 3px solid var(--text);
+}
+.notion-page .callout {
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  gap: 12px;
+  margin: 4px 0;
+  background: var(--bg-hover);
+}
+.notion-page .callout > .icon { flex: 0 0 auto; font-size: 1.2em; line-height: 1.4; }
+
+/* ---- code ---------------------------------------------------------------- */
+.notion-page .code, .notion-page code {
+  background: rgba(135, 131, 120, 0.15);
+  border-radius: 3px;
+  padding: 0.2em 0.4em;
+  font-size: 85%;
+  tab-size: 2;
+  font-family: var(--font-mono);
+}
+html[data-mode="dark"] .notion-page .code,
+html[data-mode="dark"] .notion-page code { background: rgba(255, 255, 255, 0.09); }
+.notion-page pre.code {
+  display: block;
+  padding: 1rem;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0.6em 0;
+}
+.notion-page pre.code-wrap { white-space: pre-wrap; word-break: break-word; }
+.notion-page pre code { background: none; padding: 0; font-size: 13.6px; }
+
+/* ---- columns ------------------------------------------------------------- */
+.notion-page .column-list { display: flex; gap: 46px; }
+.notion-page .column { flex-grow: 1; min-width: 0; }
+@media (max-width: 700px) {
+  .notion-page .column-list { flex-direction: column; gap: 0; }
+  .notion-page .column { width: 100% !important; }
+}
+
+/* ---- images / figures ---------------------------------------------------- */
+.notion-page figure { margin: 1.25em 0; page-break-inside: avoid; }
+.notion-page figure > object { font-size: 1.5rem; word-break: break-all; }
+.notion-page figcaption { opacity: 0.5; font-size: 1.5rem; text-align: center; }
+.notion-page img { max-width: 100%; height: auto; border-radius: 3px; }
+.notion-page .image img { display: block; }
+
+/* ---- simple tables ------------------------------------------------------- */
+.notion-page .simple-table {
+  margin-top: 1em;
+  font-size: 0.875rem;
+  empty-cells: show;
+  border-collapse: collapse;
+}
+.notion-page .simple-table td, .notion-page .simple-table th {
+  border: 1px solid var(--border);
+  padding: 0.3em 0.5em;
+  min-width: 1em;
+  vertical-align: top;
+}
+.notion-page .simple-table-header { font-weight: 600; }
+.notion-page .simple-table-header-color { background: var(--bg-sunken); }
+
+/* ---- collections (databases) --------------------------------------------- */
+.notion-page .collection-content { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.notion-page .collection-content-wrapper { overflow-x: auto; }
+.notion-page .collection-title { font-size: 1.25rem; font-weight: 600; margin: 1em 0 0.4em; }
+.notion-page table.collection-content th,
+.notion-page table.collection-content td {
+  border: 1px solid var(--border);
+  padding: 0.3em 0.5em;
+  font-size: 0.875rem;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.notion-page table.collection-content th { font-weight: 500; color: var(--text-muted); }
+.notion-page .cell-title { font-weight: 500; }
+.notion-page .property-icon, .notion-page .notion-static-icon {
+  width: 1.1em; height: 1.1em; vertical-align: -0.15em; margin-right: 4px;
+}
+
+/* ---- table of contents --------------------------------------------------- */
+.notion-page .table_of_contents-item { padding: 3px 0; }
+.notion-page .table_of_contents-link { text-decoration: none; border-bottom: 1px solid var(--border); }
+.notion-page .table_of_contents-indent-1 { margin-left: 1.5rem; }
+.notion-page .table_of_contents-indent-2 { margin-left: 3rem; }
+.notion-page .table_of_contents-indent-3 { margin-left: 4.5rem; }
+
+/* ---- bookmarks ----------------------------------------------------------- */
+.notion-page .bookmark { display: flex; text-decoration: none; border: 1px solid var(--border);
+  border-radius: 3px; overflow: hidden; margin: 4px 0; }
+.notion-page .bookmark-title { font-size: 14px; font-weight: 500; }
+.notion-page .bookmark-description { font-size: 12px; color: var(--text-muted);
+  height: 32px; overflow: hidden; }
+.notion-page .bookmark-href { font-size: 12px; color: var(--text-muted); }
+.notion-page .bookmark-info { flex: 4 1 180px; padding: 12px 14px 14px; }
+
+/* ---- Notion's block colours (light values + dark equivalents) ------------- */
+.notion-page .block-color-gray   { color: rgba(120,119,116,1); }
+.notion-page .block-color-brown  { color: rgba(159,107,83,1); }
+.notion-page .block-color-orange { color: rgba(217,115,13,1); }
+.notion-page .block-color-yellow { color: rgba(203,145,47,1); }
+.notion-page .block-color-teal   { color: rgba(68,131,97,1); }
+.notion-page .block-color-blue   { color: rgba(51,126,169,1); }
+.notion-page .block-color-purple { color: rgba(144,101,176,1); }
+.notion-page .block-color-pink   { color: rgba(193,76,138,1); }
+.notion-page .block-color-red    { color: rgba(212,76,71,1); }
+.notion-page .block-color-gray_background   { background: rgba(241,241,239,1); }
+.notion-page .block-color-brown_background  { background: rgba(244,238,238,1); }
+.notion-page .block-color-orange_background { background: rgba(251,236,221,1); }
+.notion-page .block-color-yellow_background { background: rgba(251,243,219,1); }
+.notion-page .block-color-teal_background   { background: rgba(237,243,236,1); }
+.notion-page .block-color-blue_background   { background: rgba(231,243,248,1); }
+.notion-page .block-color-purple_background { background: rgba(244,240,247,0.8); }
+.notion-page .block-color-pink_background   { background: rgba(249,238,243,0.8); }
+.notion-page .block-color-red_background    { background: rgba(253,235,236,1); }
+.notion-page .block-color-default_background { background: var(--bg-hover); }
+
+html[data-mode="dark"] .notion-page .block-color-gray_background   { background: rgba(255,255,255,.055); }
+html[data-mode="dark"] .notion-page .block-color-brown_background  { background: rgba(147,114,100,.20); }
+html[data-mode="dark"] .notion-page .block-color-orange_background { background: rgba(217,115,13,.20); }
+html[data-mode="dark"] .notion-page .block-color-yellow_background { background: rgba(203,145,47,.20); }
+html[data-mode="dark"] .notion-page .block-color-teal_background   { background: rgba(68,131,97,.20); }
+html[data-mode="dark"] .notion-page .block-color-blue_background   { background: rgba(51,126,169,.20); }
+html[data-mode="dark"] .notion-page .block-color-purple_background { background: rgba(144,101,176,.20); }
+html[data-mode="dark"] .notion-page .block-color-pink_background   { background: rgba(193,76,138,.20); }
+html[data-mode="dark"] .notion-page .block-color-red_background    { background: rgba(212,76,71,.20); }
+
+/* Imported pages sit on the same canvas width Notion uses (900px). */
+.notion-page-wrap { max-width: 900px; margin: 0 auto; padding: 0 var(--s10) var(--s16); }
+@media (max-width: 700px) { .notion-page-wrap { padding: 0 16px var(--s12); } }

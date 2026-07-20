@@ -396,6 +396,111 @@ function render_value(array $prop, ?string $value): string
     }
 }
 
+/* ------------------------------------------------------- HTML sanitiser --- */
+
+/**
+ * Allow-list sanitiser for imported Notion HTML.
+ *
+ * Imported markup is third-party content rendered inside an authenticated
+ * page, so it is treated as hostile: only known-safe tags and attributes
+ * survive, and anything that can execute (script, event handlers, javascript:
+ * URLs, style blocks, iframes, forms) is dropped.
+ */
+function sanitize_notion_html(string $html): string
+{
+    if (trim($html) === '') return '';
+
+    $allowedTags = [
+        'div','span','p','br','hr','h1','h2','h3','h4','h5','h6',
+        'ul','ol','li','blockquote','pre','code','figure','figcaption',
+        'strong','b','em','i','u','s','del','mark','sub','sup','small',
+        'a','img','table','thead','tbody','tfoot','tr','td','th','colgroup','col',
+        'article','section','header','footer','aside','details','summary','time','nav',
+    ];
+    // style is allowed but scrubbed below (Notion uses it for column widths).
+    $allowedAttrs = ['class','id','href','src','alt','title','colspan','rowspan',
+                     'width','height','style','dir','start','type','datetime'];
+
+    $doc = new DOMDocument();
+    $prev = libxml_use_internal_errors(true);
+    $doc->loadHTML('<?xml encoding="UTF-8"><div id="__root">' . $html . '</div>',
+                   LIBXML_NOWARNING | LIBXML_NOERROR);
+    libxml_clear_errors();
+    libxml_use_internal_errors($prev);
+
+    $xp = new DOMXPath($doc);
+
+    // Remove executable / unwanted elements outright, including their contents.
+    foreach ($xp->query('//script | //style | //iframe | //object | //embed | //form | //input | //button | //link | //meta | //noscript | //svg') as $bad) {
+        if ($bad->parentNode) { $bad->parentNode->removeChild($bad); }
+    }
+
+    // Walk everything else.
+    $all = iterator_to_array($xp->query('//*'));
+    foreach ($all as $el) {
+        if (!($el instanceof DOMElement) || !$el->parentNode) continue;
+        $tag = strtolower($el->nodeName);
+        if ($tag === 'html' || $tag === 'body' || $tag === 'head') continue;
+        if ($el->getAttribute('id') === '__root') continue;
+
+        if (!in_array($tag, $allowedTags, true)) {
+            // Unwrap: keep the children, drop the element.
+            while ($el->firstChild) {
+                $el->parentNode->insertBefore($el->firstChild, $el);
+            }
+            $el->parentNode->removeChild($el);
+            continue;
+        }
+
+        foreach (iterator_to_array($el->attributes ?? []) as $attr) {
+            $name = strtolower($attr->nodeName);
+            $val = (string)$attr->nodeValue;
+
+            // Every on* handler, and anything not allow-listed.
+            if (str_starts_with($name, 'on') || !in_array($name, $allowedAttrs, true)) {
+                $el->removeAttribute($attr->nodeName);
+                continue;
+            }
+            if ($name === 'href' || $name === 'src') {
+                $clean = trim(html_entity_decode($val, ENT_QUOTES, 'UTF-8'));
+                if (preg_match('/^\s*(javascript|vbscript|data|file)\s*:/i', $clean)) {
+                    $el->removeAttribute($attr->nodeName);
+                }
+            }
+            if ($name === 'style') {
+                // Keep only harmless layout declarations.
+                $safe = [];
+                foreach (explode(';', $val) as $decl) {
+                    if (!str_contains($decl, ':')) continue;
+                    [$prop, $v] = explode(':', $decl, 2);
+                    $prop = strtolower(trim($prop));
+                    $v = trim($v);
+                    if (preg_match('/(expression|url\s*\(|javascript|@import|behaviou?r)/i', $v)) continue;
+                    if (in_array($prop, ['width','height','max-width','min-width','text-align',
+                                         'object-position','white-space','display','flex','order'], true)) {
+                        $safe[] = "$prop:$v";
+                    }
+                }
+                if ($safe) { $el->setAttribute('style', implode(';', $safe)); }
+                else { $el->removeAttribute('style'); }
+            }
+        }
+
+        // External links open safely.
+        if ($tag === 'a' && preg_match('~^https?://~i', $el->getAttribute('href'))) {
+            $el->setAttribute('target', '_blank');
+            $el->setAttribute('rel', 'noopener noreferrer');
+        }
+        if ($tag === 'img') { $el->setAttribute('loading', 'lazy'); }
+    }
+
+    $root = $doc->getElementById('__root');
+    if (!$root) return '';
+    $out = '';
+    foreach ($root->childNodes as $c) { $out .= $doc->saveHTML($c); }
+    return $out;
+}
+
 /* --------------------------------------------------------------- render --- */
 
 /**
@@ -465,6 +570,12 @@ function render_block(array $b): string
                    . htmlspecialchars((string)$b['content'], ENT_QUOTES, 'UTF-8') . "</code></pre>";
             break;
         case 'divider': $inner = "<hr class='bk-divider'>"; break;
+
+        case 'notion_html':
+            // Imported Notion body, rendered with Notion's own stylesheet.
+            // Sanitised on import; re-sanitised here as defence in depth.
+            $inner = "<div class='notion-page'>" . sanitize_notion_html((string)$b['content']) . "</div>";
+            break;
 
         case 'bookmark': {
             $url = trim((string)$b['content']);

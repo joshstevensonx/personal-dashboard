@@ -20,6 +20,7 @@ function setting_defaults(): array
         'shortcuts'     => '{}',
         'layout'        => '[]',
         'start_page'    => 'index.php',
+        'notion_token'  => '',
     ];
 }
 

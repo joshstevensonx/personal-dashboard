@@ -82,6 +82,7 @@ function nav_model(): array
             'review.php'    => ['Weekly review', '✓'],
         ],
         'System' => [
+            'import.php'    => ['Import from Notion', '⇧'],
             'export.php'    => ['Export & backup', '⇩'],
             'settings.php'  => ['Settings', '⚙'],
         ],
@@ -173,6 +174,7 @@ function page_header(string $active = ''): void
     echo "<link rel='stylesheet' href='assets/tokens.css'>";
     echo "<link rel='stylesheet' href='assets/base.css'>";
     echo "<link rel='stylesheet' href='assets/app.css'>";
+    echo "<link rel='stylesheet' href='assets/notion-render.css'>";
     echo "<link rel='stylesheet' href='assets/responsive.css'>";
     echo "<link rel='manifest' href='manifest.webmanifest'>";
     echo "<meta name='theme-color' content='" . e($accent) . "'>";
