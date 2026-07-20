@@ -37,6 +37,37 @@ Plus a **daily email digest** (via cron) for anything renewing or due soon.
 - **Reminders** + a much richer daily cron briefing (overdue, due soon, events, renewals, dates)
 - **Auto-maintenance** — weekly DB snapshot, 30-day pruning, stale recurring tasks rolled forward
 
+**Phase 3 — productivity & tracking:**
+- **Pomodoro / deep-work timer** — wall-clock accurate (survives tab throttling), presets,
+  interruption counter, auto-logs the session, audio cue
+- **Habit tracker** with current/longest streaks and a 90-day heatmap
+- **Goals** with targets, progress log, sub-goals and % completion
+- **Daily planner** — intention, time blocks, evening review, energy/mood, habit ticks,
+  and pulling overdue or unscheduled tasks into the day
+
+**Phase 4 — notes & knowledge:**
+- **Markdown editor** with live preview, split / edit-only / reading modes
+- **Wiki links** `[[Note Title]]` with automatic **backlinks** and linked-references panel
+- **Note graph** — force-directed canvas view, click to open, orphan detection
+- **Full-text search** (SQLite FTS5 with highlighted snippets; LIKE fallback)
+- Nested **folders**, tags, pinned notes, **daily notes**, templates, trash + restore
+- **Version history** — every edit snapshotted, restore any revision
+- **Attachments** with markdown insertion
+
+**Phase 5 — reporting:**
+- Productivity analytics: completions/day, focus/day, by project, by priority, by weekday
+- Habit streak grids, goal progress, **CSV export** for focus/tasks/habits
+- **Weekly review** — auto-assembled facts + reflection, saved into Notes with history
+
+**Phase 6 — export, backup & OCR:**
+- **Markdown export** — all notes as `.md` with YAML front-matter, zipped (works with or
+  without the `zip` extension — includes a built-in ZIP writer)
+- **Full JSON export** of every table
+- **Encrypted backups** — AES-256-CBC, PBKDF2 (200k iterations), HMAC-SHA256
+  encrypt-then-MAC, plus an in-app **verify** tool
+- **PDF export** via print stylesheet (Reading mode → Print → Save as PDF)
+- **OCR** for image attachments via tesseract.js, running entirely in your browser
+
 > **How the remote hub works:** it's a launcher and directory, not a screen-streaming
 > server. The actual connection runs through the remote-access app you choose (RustDesk,
 > Chrome Remote Desktop, Microsoft Remote Desktop, VNC/Screen Sharing). A PHP host can't

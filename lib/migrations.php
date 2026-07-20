@@ -152,6 +152,145 @@ function migration_list(): array
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
         "],
+
+        4 => ['productivity_tracking', "
+            CREATE TABLE IF NOT EXISTS focus_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id INTEGER REFERENCES tasks(id) ON DELETE SET NULL,
+                kind TEXT NOT NULL DEFAULT 'pomodoro',
+                label TEXT,
+                started_at TEXT NOT NULL,
+                ended_at TEXT,
+                duration_sec INTEGER,
+                interruptions INTEGER NOT NULL DEFAULT 0,
+                notes TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_focus_started ON focus_sessions(started_at);
+
+            CREATE TABLE IF NOT EXISTS habits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                color TEXT,
+                cadence TEXT NOT NULL DEFAULT 'daily',
+                target INTEGER NOT NULL DEFAULT 1,
+                archived INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS habit_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                habit_id INTEGER NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+                date TEXT NOT NULL,
+                count INTEGER NOT NULL DEFAULT 1,
+                note TEXT,
+                UNIQUE (habit_id, date)
+            );
+
+            CREATE TABLE IF NOT EXISTS goals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                parent_id INTEGER REFERENCES goals(id) ON DELETE CASCADE,
+                title TEXT NOT NULL,
+                description TEXT,
+                target_value REAL,
+                current_value REAL NOT NULL DEFAULT 0,
+                unit TEXT,
+                due_date TEXT,
+                status TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS goal_progress (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                goal_id INTEGER NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+                date TEXT NOT NULL,
+                value REAL NOT NULL,
+                note TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS daily_plans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT UNIQUE NOT NULL,
+                intention TEXT,
+                plan TEXT,
+                review TEXT,
+                energy INTEGER,
+                mood INTEGER
+            );
+        "],
+
+        5 => ['notes_and_knowledge', "
+            CREATE TABLE IF NOT EXISTS folders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                parent_id INTEGER REFERENCES folders(id) ON DELETE CASCADE,
+                name TEXT NOT NULL,
+                position INTEGER NOT NULL DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                folder_id INTEGER REFERENCES folders(id) ON DELETE SET NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL DEFAULT '',
+                format TEXT NOT NULL DEFAULT 'md',
+                pinned INTEGER NOT NULL DEFAULT 0,
+                daily_date TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT,
+                deleted_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_notes_folder ON notes(folder_id);
+            CREATE INDEX IF NOT EXISTS idx_notes_daily ON notes(daily_date);
+
+            CREATE TABLE IF NOT EXISTS note_links (
+                source_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+                target_id INTEGER REFERENCES notes(id) ON DELETE CASCADE,
+                target_title TEXT NOT NULL,
+                PRIMARY KEY (source_id, target_title)
+            );
+
+            CREATE TABLE IF NOT EXISTS note_revisions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                note_id INTEGER NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+                body TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS attachments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                note_id INTEGER REFERENCES notes(id) ON DELETE CASCADE,
+                filename TEXT NOT NULL,
+                path TEXT NOT NULL,
+                mime TEXT,
+                size INTEGER,
+                ocr_text TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                body TEXT NOT NULL,
+                kind TEXT NOT NULL DEFAULT 'note'
+            );
+
+            CREATE TABLE IF NOT EXISTS smart_collections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                query TEXT NOT NULL,
+                icon TEXT,
+                position INTEGER NOT NULL DEFAULT 0
+            );
+        "],
+
+        6 => ['backups_log', "
+            CREATE TABLE IF NOT EXISTS backups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT NOT NULL,
+                size INTEGER,
+                encrypted INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+        "],
     ];
 }
 

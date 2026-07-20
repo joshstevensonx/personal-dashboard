@@ -167,7 +167,10 @@
   var GOTO = {
     d: 'index.php', i: 'inbox.php', s: 'subscriptions.php',
     t: 'dates.php', b: 'bookmarks.php', r: 'remote.php', ',': 'settings.php',
-    k: 'tasks.php', c: 'calendar.php'
+    k: 'tasks.php', c: 'calendar.php',
+    p: 'planner.php', f: 'focus.php', h: 'habits.php', o: 'goals.php',
+    n: 'notes.php', j: 'notes.php?daily=1',
+    e: 'export.php', w: 'review.php', a: 'reports.php'
   };
   Object.keys(CUSTOM).forEach(function (k) { GOTO[k] = CUSTOM[k]; });
 

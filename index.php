@@ -16,6 +16,15 @@ $doneWeek    = (int)$pdo->query("SELECT COUNT(*) FROM tasks WHERE status='done' 
 // --- Calendar summary --------------------------------------------------------
 $evNext = $pdo->query("SELECT title, start_at, all_day FROM events WHERE datetime(start_at) >= datetime('now','-2 hour') ORDER BY start_at LIMIT 4")->fetchAll();
 
+// --- Focus / habits summary --------------------------------------------------
+require_once __DIR__ . '/lib/productivity.php';
+$focusToday = (int)$pdo->query("SELECT COALESCE(SUM(duration_sec),0) FROM focus_sessions WHERE date(started_at)=date('now') AND kind<>'break' AND ended_at IS NOT NULL")->fetchColumn();
+$focusWeek  = (int)$pdo->query("SELECT COALESCE(SUM(duration_sec),0) FROM focus_sessions WHERE date(started_at)>=date('now','-7 day') AND kind<>'break' AND ended_at IS NOT NULL")->fetchColumn();
+$habitRows  = $pdo->query("SELECT * FROM habits WHERE archived=0 ORDER BY id LIMIT 5")->fetchAll();
+$habitDone  = (int)$pdo->query("SELECT COUNT(*) FROM habit_entries WHERE date=date('now')")->fetchColumn();
+$habitTotal = (int)$pdo->query("SELECT COUNT(*) FROM habits WHERE archived=0")->fetchColumn();
+$goalsActive = $pdo->query("SELECT * FROM goals WHERE status='active' ORDER BY (due_date IS NULL), due_date LIMIT 4")->fetchAll();
+
 // --- Inbox summary -----------------------------------------------------------
 $inboxOpen = (int)$pdo->query("SELECT COUNT(*) FROM inbox WHERE done = 0")->fetchColumn();
 $inboxRecent = $pdo->query("SELECT body, kind FROM inbox WHERE done = 0 ORDER BY id DESC LIMIT 4")->fetchAll();
@@ -83,6 +92,29 @@ page_header('index.php');
         </ul>
         <a class="cta" href="calendar.php">Open calendar →</a>
     </div>
+
+    <div class="card">
+        <h2>Focus</h2>
+        <div class="big"><?= e(hhmm($focusToday)) ?><span class="muted" style="font-size:14px"> today</span></div>
+        <ul>
+            <li><span class="grow">This week</span><span class="pill"><?= e(hhmm($focusWeek)) ?></span></li>
+            <li><span class="grow">Habits done today</span><span class="pill <?= $habitTotal && $habitDone >= $habitTotal ? 'ok' : '' ?>"><?= $habitDone ?>/<?= $habitTotal ?></span></li>
+        </ul>
+        <a class="cta" href="focus.php">Start a session →</a>
+    </div>
+
+    <?php if ($goalsActive): ?>
+    <div class="card">
+        <h2>Goals</h2>
+        <div class="big"><?= count($goalsActive) ?><span class="muted" style="font-size:14px"> active</span></div>
+        <ul>
+            <?php foreach ($goalsActive as $g): $pct = goal_percent($g); ?>
+                <li><span class="grow" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e(mb_strimwidth($g['title'], 0, 26, '…')) ?></span><span class="pill <?= $pct >= 100 ? 'ok' : '' ?>"><?= $pct ?>%</span></li>
+            <?php endforeach; ?>
+        </ul>
+        <a class="cta" href="goals.php">View goals →</a>
+    </div>
+    <?php endif; ?>
 
     <div class="card">
         <h2>Quick-capture inbox</h2>

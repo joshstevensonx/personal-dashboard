@@ -15,18 +15,33 @@ function nav_model(): array
             'inbox.php'     => ['Inbox', '⌁'],
         ],
         'Plan' => [
+            'planner.php'   => ['Daily plan', '◉'],
             'tasks.php'     => ['Tasks', '☑'],
             'calendar.php'  => ['Calendar', '▤'],
+        ],
+        'Focus' => [
+            'focus.php'     => ['Focus timer', '◐'],
+            'habits.php'    => ['Habits', '▪'],
+            'goals.php'     => ['Goals', '◎'],
         ],
         'Track' => [
             'subscriptions.php' => ['Subscriptions', '↻'],
             'dates.php'         => ['Dates', '◷'],
         ],
+        'Knowledge' => [
+            'notes.php'     => ['Notes', '✎'],
+            'graph.php'     => ['Graph', '⁂'],
+        ],
         'Reference' => [
             'bookmarks.php' => ['Bookmarks', '★'],
             'remote.php'    => ['Remote', '⌘'],
         ],
+        'Review' => [
+            'reports.php'   => ['Reports', '▧'],
+            'review.php'    => ['Weekly review', '✓'],
+        ],
         'System' => [
+            'export.php'    => ['Export & backup', '⇩'],
             'settings.php'  => ['Settings', '⚙'],
         ],
     ];
@@ -48,6 +63,12 @@ function command_model(): array
     $cmds[] = ['id' => 'view:today',   'label' => 'Tasks due today',        'group' => 'Tasks',  'icon' => '☑', 'href' => 'tasks.php?filter=today'];
     $cmds[] = ['id' => 'view:overdue', 'label' => 'Overdue tasks',          'group' => 'Tasks',  'icon' => '!', 'href' => 'tasks.php?filter=overdue'];
     $cmds[] = ['id' => 'view:board',   'label' => 'Kanban board',           'group' => 'Tasks',  'icon' => '▥', 'href' => 'tasks.php?view=board'];
+    $cmds[] = ['id' => 'new:habit',    'label' => 'Add a habit',            'group' => 'Create', 'icon' => '+', 'href' => 'habits.php#new'];
+    $cmds[] = ['id' => 'new:goal',     'label' => 'Add a goal',             'group' => 'Create', 'icon' => '+', 'href' => 'goals.php#new'];
+    $cmds[] = ['id' => 'go:pomodoro',  'label' => 'Start a focus session',  'group' => 'Focus',  'icon' => '◐', 'href' => 'focus.php'];
+    $cmds[] = ['id' => 'new:note',     'label' => 'New note',               'group' => 'Create', 'icon' => '✎', 'href' => 'notes.php?new='];
+    $cmds[] = ['id' => 'go:daily',     "label" => "Today's daily note",     'group' => 'Notes',  'icon' => '☀', 'href' => 'notes.php?daily=1'];
+    $cmds[] = ['id' => 'go:search',    'label' => 'Search notes',           'group' => 'Notes',  'icon' => '⌕', 'href' => 'notes.php'];
     $cmds[] = ['id' => 'new:capture',  'label' => 'Quick capture a note',   'group' => 'Create', 'icon' => '+', 'href' => 'inbox.php#new'];
     $cmds[] = ['id' => 'new:bookmark', 'label' => 'Save a bookmark',        'group' => 'Create', 'icon' => '+', 'href' => 'bookmarks.php#new'];
     $cmds[] = ['id' => 'new:sub',      'label' => 'Add a subscription',     'group' => 'Create', 'icon' => '+', 'href' => 'subscriptions.php#new'];
