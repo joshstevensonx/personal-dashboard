@@ -12,7 +12,7 @@ A single, private web app that bundles four everyday tools behind one login:
   (works on Mac + Windows). Store a "share note" to hand access to someone else. Includes
   a per-platform setup guide.
 
-Plus a **daily email digest** (via cron) for anything renewing or due soon.
+Plus a **daily email digest** (via cron) for anything renewing or due soon. 
 
 **Phase 1 app shell** (see ROADMAP.md for the full plan):
 - **Sidebar navigation** with grouped sections
